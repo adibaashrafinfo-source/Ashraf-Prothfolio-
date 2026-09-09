@@ -69,59 +69,52 @@ form will show an error toast instead of submitting.
 
 ## Updating content
 
-Most site copy (name, tagline, about text, stats, contact info, social links) lives in one
-place: **`src/data/site.ts`**. Skills and services live in `src/data/skills.ts` and
-`src/data/services.ts`. Edit these files directly to rebrand or update copy — no component
-changes needed.
+There are two ways to edit content, and both work together:
 
-### Updating projects & testimonials via Supabase
+1. **The admin panel** (recommended) — sign in at `/admin` and edit everything from a browser:
+   header logo/text, hero/about copy, stats, contact info, social links, portfolio projects
+   (with image upload), testimonials, and incoming contact messages. See
+   [Admin panel](#admin-panel) below for setup.
+2. **Editing code directly** — `src/data/site.ts` holds the *default/fallback* copy used until
+   Supabase has real data (or if Supabase isn't configured at all). Skills and services
+   (`src/data/skills.ts`, `src/data/services.ts`) are not part of the admin panel and are only
+   editable in code.
 
-The Portfolio and Testimonials sections read from Supabase tables (with the static files above
-used only as a fallback). This app assumes the following tables already exist in your Supabase
-project — create them once via the Supabase SQL editor if they don't exist yet:
+### Supabase schema
 
-```sql
-create table projects (
-  id uuid primary key default gen_random_uuid(),
-  title text not null,
-  category text not null check (category in ('E-Commerce', 'Software')),
-  description text not null,
-  image_url text not null,
-  project_url text,
-  created_at timestamptz not null default now()
-);
+Run [`supabase/schema.sql`](./supabase/schema.sql) once in your Supabase project's SQL Editor
+(Dashboard → SQL Editor → New query → paste the file → Run). It creates every table the site and
+admin panel need (`projects`, `testimonials`, `contact_submissions`, `site_settings`,
+`social_links`), a public `media` storage bucket for uploaded images, and Row Level Security
+policies so visitors can only read content and submit the contact form, while a signed-in admin
+can manage everything. It's safe to re-run.
 
-create table testimonials (
-  id uuid primary key default gen_random_uuid(),
-  client_name text not null,
-  client_role text not null,
-  client_avatar_url text,
-  message text not null,
-  rating int not null default 5,
-  created_at timestamptz not null default now()
-);
+## Admin panel
 
-create table contact_submissions (
-  id uuid primary key default gen_random_uuid(),
-  name text not null,
-  email text not null,
-  subject text not null,
-  message text not null,
-  created_at timestamptz not null default now()
-);
+The site ships with a full admin panel at **`/admin`** for managing content without touching
+code:
 
-alter table projects enable row level security;
-alter table testimonials enable row level security;
-alter table contact_submissions enable row level security;
+- **Site Settings** — name, title, tagline, about text, stats (years/projects/clients/awards),
+  location, email, phone, resume link, map embed, and the header logo (text or an uploaded
+  image).
+- **Social Links** — add, edit, reorder, or remove social/contact links shown in the footer and
+  contact section.
+- **Portfolio** — add, edit, or delete projects, with drag-and-drop-free image upload straight
+  to Supabase Storage.
+- **Testimonials** — add, edit, or delete client testimonials.
+- **Messages** — read and delete everything submitted through the public contact form.
 
-create policy "Public can read projects" on projects for select using (true);
-create policy "Public can read testimonials" on testimonials for select using (true);
-create policy "Public can insert contact submissions" on contact_submissions for insert with check (true);
-```
+### Setting up your admin login
 
-To add or edit a project or testimonial, insert/update a row in the Supabase table editor (or
-via SQL) — the site picks it up automatically, ordered newest first. Contact form submissions
-land in `contact_submissions` for you to review in the Supabase dashboard.
+1. Run `supabase/schema.sql` (see above) if you haven't already.
+2. In the Supabase dashboard, go to **Authentication → Users → Add user**, and create yourself
+   an email + password. (There is no public sign-up page — accounts are created by you in the
+   dashboard on purpose, so a stranger can't register their own admin access.)
+3. Visit `/admin/login` on your deployed site (or `http://localhost:5173/admin/login` locally)
+   and sign in with that email and password.
+
+Anyone signed in can manage all content per the RLS policies in the schema — only create
+accounts for people you trust with full edit access.
 
 ## Rebranding
 
