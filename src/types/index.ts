@@ -1,4 +1,4 @@
-export type ProjectCategory = 'Graphic Design' | 'Web Development' | 'Digital Marketing'
+export type ProjectCategory = 'E-Commerce' | 'Software'
 
 export interface Project {
   id: string

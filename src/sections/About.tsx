@@ -25,12 +25,12 @@ export function About() {
           <div className="bg-primary/10 absolute -inset-4 -z-10 rounded-3xl" />
           <div className="border-border bg-card overflow-hidden rounded-3xl border shadow-lg">
             <img
-              src="/profile.jpg"
-              alt={`${site.name} working`}
+              src="/profile-about.jpg"
+              alt={`${site.name} portrait`}
               width={480}
-              height={480}
+              height={600}
               loading="lazy"
-              className="aspect-square w-full object-cover"
+              className="aspect-4/5 w-full object-cover"
             />
           </div>
         </Reveal>

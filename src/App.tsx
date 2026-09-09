@@ -1,32 +1,17 @@
-import { Navbar } from '@/components/layout/Navbar'
-import { Footer } from '@/components/layout/Footer'
-import { Toaster } from '@/components/ui/toaster'
-import { Hero } from '@/sections/Hero'
-import { About } from '@/sections/About'
-import { Skills } from '@/sections/Skills'
-import { Services } from '@/sections/Services'
-import { Portfolio } from '@/sections/Portfolio'
-import { Stats } from '@/sections/Stats'
-import { Testimonials } from '@/sections/Testimonials'
-import { Contact } from '@/sections/Contact'
+import { Route, Routes } from 'react-router-dom'
+
+import { Layout } from '@/components/layout/Layout'
+import { Home } from '@/pages/Home'
+import { ProjectDetail } from '@/pages/ProjectDetail'
 
 function App() {
   return (
-    <>
-      <Navbar />
-      <main>
-        <Hero />
-        <About />
-        <Skills />
-        <Services />
-        <Portfolio />
-        <Stats />
-        <Testimonials />
-        <Contact />
-      </main>
-      <Footer />
-      <Toaster />
-    </>
+    <Routes>
+      <Route element={<Layout />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/portfolio/:id" element={<ProjectDetail />} />
+      </Route>
+    </Routes>
   )
 }
 

@@ -1,20 +1,22 @@
 import { ArrowUp } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { useSectionNav } from '@/hooks/use-section-nav'
 import { navLinks, site } from '@/data/site'
 
 export function Footer() {
   const year = new Date().getFullYear()
+  const { goToSection } = useSectionNav()
 
   return (
     <footer className="border-border bg-secondary/40 border-t">
       <div className="container-px mx-auto flex max-w-6xl flex-col gap-10 py-14">
         <div className="flex flex-col items-start justify-between gap-8 md:flex-row">
           <div className="max-w-sm">
-            <a href="#top" className="font-display text-lg font-bold">
+            <button onClick={() => goToSection('#top')} className="font-display text-lg font-bold">
               {site.shortName}
               <span className="text-primary">.</span>
-            </a>
+            </button>
             <p className="text-muted-foreground mt-3 text-sm leading-relaxed">{site.tagline}</p>
           </div>
 
@@ -23,12 +25,12 @@ export function Footer() {
             <ul className="flex flex-wrap gap-x-6 gap-y-2">
               {navLinks.map((link) => (
                 <li key={link.href}>
-                  <a
-                    href={link.href}
+                  <button
+                    onClick={() => goToSection(link.href)}
                     className="text-muted-foreground hover:text-primary text-sm transition-colors"
                   >
                     {link.label}
-                  </a>
+                  </button>
                 </li>
               ))}
             </ul>

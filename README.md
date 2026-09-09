@@ -7,6 +7,7 @@ Motion, and Supabase.
 ## Tech stack
 
 - **Framework:** React 19 + TypeScript + Vite
+- **Routing:** React Router (home page + a dedicated `/portfolio/:id` page per project)
 - **Styling:** Tailwind CSS v4 + shadcn/ui-style components
 - **Animation:** Framer Motion
 - **Icons:** lucide-react
@@ -20,16 +21,28 @@ Motion, and Supabase.
 src/
   components/
     ui/          # shadcn-style primitives (button, card, input, tabs, toast...)
-    layout/      # Navbar, Footer
-    Reveal.tsx, SectionHeading.tsx
+    layout/      # Layout (Navbar + Footer + Toaster shell), Navbar, Footer
+    Reveal.tsx, SectionHeading.tsx, TechBackground.tsx
+  pages/         # Home (the one-page layout), ProjectDetail (per-project case study page)
   sections/      # Hero, About, Skills, Services, Portfolio, Stats, Testimonials, Contact
-  hooks/         # use-dark-mode, use-counter, use-projects, use-testimonials, use-toast
+  hooks/         # use-dark-mode, use-counter, use-projects, use-testimonials,
+                 # use-section-nav, use-toast
   lib/           # supabaseClient.ts, utils.ts, contactSchema.ts
   types/         # Project, Testimonial, ContactSubmission types
   data/          # site.ts (all editable content), skills.ts, services.ts,
                  # projects.ts / testimonials.ts (static fallback data)
-public/          # favicon, profile.jpg, cv.pdf, og-image.png, robots.txt, sitemap.xml
+public/          # favicon, profile.jpg, profile-about.jpg, cv.pdf, og-image.png,
+                 # robots.txt, sitemap.xml
+vercel.json      # SPA rewrite so /portfolio/:id resolves correctly on refresh/direct load
 ```
+
+### Routing
+
+The site is a single page (`/`) with anchor-scroll navigation, plus one route per portfolio
+project: clicking a project card in the Portfolio section opens `/portfolio/:id`, a full case
+study page reusing the same project data (Supabase or the static fallback). Nav links and the
+logo work from any page — if you're not on `/`, clicking a section link navigates back to `/`
+and scrolls to that section.
 
 ## Getting started
 
@@ -71,7 +84,7 @@ project — create them once via the Supabase SQL editor if they don't exist yet
 create table projects (
   id uuid primary key default gen_random_uuid(),
   title text not null,
-  category text not null check (category in ('Graphic Design', 'Web Development', 'Digital Marketing')),
+  category text not null check (category in ('E-Commerce', 'Software')),
   description text not null,
   image_url text not null,
   project_url text,
@@ -151,7 +164,8 @@ git push -u origin main
 
 ## Before going live
 
-- Replace `public/profile.jpg` with a real photo.
+- `public/profile.jpg` (Hero) and `public/profile-about.jpg` (About) already have real photos —
+  swap either file to update them.
 - Replace `public/cv.pdf` with your real resume.
 - Replace `public/og-image.png` with a branded 1200×630 social preview image.
 - Update the canonical URL and OG/Twitter `og:url` / `og:image` values in `index.html` and

@@ -5,6 +5,7 @@ import { Menu, Moon, Sun, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useDarkMode } from '@/hooks/use-dark-mode'
+import { useSectionNav } from '@/hooks/use-section-nav'
 import { navLinks, site } from '@/data/site'
 
 export function Navbar() {
@@ -12,6 +13,7 @@ export function Navbar() {
   const [open, setOpen] = React.useState(false)
   const [active, setActive] = React.useState('')
   const { theme, toggle } = useDarkMode()
+  const { goToSection } = useSectionNav()
 
   React.useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12)
@@ -40,7 +42,7 @@ export function Navbar() {
 
   const handleNavClick = (href: string) => {
     setOpen(false)
-    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' })
+    goToSection(href)
   }
 
   return (
@@ -57,7 +59,7 @@ export function Navbar() {
           href="#top"
           onClick={(e) => {
             e.preventDefault()
-            window.scrollTo({ top: 0, behavior: 'smooth' })
+            handleNavClick('#top')
           }}
           className="font-display text-lg font-bold"
         >
