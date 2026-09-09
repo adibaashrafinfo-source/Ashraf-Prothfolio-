@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { ArrowRight, Download, Sparkles } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { TechBackground } from '@/components/TechBackground'
 import { site } from '@/data/site'
 
 export function Hero() {
@@ -23,8 +24,9 @@ export function Hero() {
         aria-hidden
         className="bg-accent/60 pointer-events-none absolute right-0 bottom-0 size-96 rounded-full blur-3xl"
       />
+      <TechBackground />
 
-      <div className="container-px relative mx-auto grid max-w-6xl items-center gap-12 py-16 md:grid-cols-2">
+      <div className="container-px relative z-10 mx-auto grid max-w-6xl items-center gap-12 py-16 md:grid-cols-2">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
