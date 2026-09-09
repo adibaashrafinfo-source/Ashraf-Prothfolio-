@@ -1,11 +1,12 @@
 import * as React from 'react'
 
 import { supabase } from '@/lib/supabaseClient'
-import { fallbackProjects } from '@/data/projects'
-import type { Project } from '@/types'
+import { defaultSiteSettings } from '@/data/site'
+import type { SiteSettings } from '@/types'
 
-export function useProjects() {
-  const [projects, setProjects] = React.useState<Project[]>(fallbackProjects)
+export function useSiteSettings() {
+  const [settings, setSettings] =
+    React.useState<Omit<SiteSettings, 'id' | 'updated_at'>>(defaultSiteSettings)
   const [loading, setLoading] = React.useState(true)
 
   React.useEffect(() => {
@@ -19,16 +20,17 @@ export function useProjects() {
 
       try {
         const { data, error } = await supabase
-          .from('projects')
+          .from('site_settings')
           .select('*')
-          .order('created_at', { ascending: false })
+          .eq('id', 'default')
+          .maybeSingle()
 
         if (cancelled) return
-        if (!error && data && data.length > 0) {
-          setProjects(data as Project[])
+        if (!error && data) {
+          setSettings({ ...defaultSiteSettings, ...data })
         }
       } catch {
-        // Network/connection failure — keep the fallback projects.
+        // Network/connection failure — keep the default settings.
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -40,5 +42,5 @@ export function useProjects() {
     }
   }, [])
 
-  return { projects, loading }
+  return { settings, loading }
 }

@@ -1,21 +1,26 @@
 import { ArrowUp } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { Logo } from '@/components/Logo'
 import { useSectionNav } from '@/hooks/use-section-nav'
-import { navLinks, site } from '@/data/site'
+import { useSiteSettings } from '@/hooks/use-site-settings'
+import { useSocialLinks } from '@/hooks/use-social-links'
+import { socialIconMap } from '@/lib/socialIcons'
+import { navLinks } from '@/data/site'
 
 export function Footer() {
   const year = new Date().getFullYear()
   const { goToSection } = useSectionNav()
+  const { settings: site } = useSiteSettings()
+  const { links: social } = useSocialLinks()
 
   return (
     <footer className="border-border bg-secondary/40 border-t">
       <div className="container-px mx-auto flex max-w-6xl flex-col gap-10 py-14">
         <div className="flex flex-col items-start justify-between gap-8 md:flex-row">
           <div className="max-w-sm">
-            <button onClick={() => goToSection('#top')} className="font-display text-lg font-bold">
-              {site.shortName}
-              <span className="text-primary">.</span>
+            <button onClick={() => goToSection('#top')}>
+              <Logo text={site.logo_text} imageUrl={site.logo_image_url} />
             </button>
             <p className="text-muted-foreground mt-3 text-sm leading-relaxed">{site.tagline}</p>
           </div>
@@ -39,18 +44,21 @@ export function Footer() {
           <div className="flex flex-col gap-3">
             <span className="text-sm font-semibold">Follow</span>
             <div className="flex gap-3">
-              {site.social.map((s) => (
-                <a
-                  key={s.name}
-                  href={s.href}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  aria-label={s.name}
-                  className="border-border bg-background hover:bg-primary hover:text-primary-foreground hover:border-primary flex size-9 items-center justify-center rounded-full border transition-colors"
-                >
-                  <s.icon className="size-4" />
-                </a>
-              ))}
+              {social.map((s) => {
+                const Icon = socialIconMap[s.icon]
+                return (
+                  <a
+                    key={s.id}
+                    href={s.href}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    aria-label={s.name}
+                    className="border-border bg-background hover:bg-primary hover:text-primary-foreground hover:border-primary flex size-9 items-center justify-center rounded-full border transition-colors"
+                  >
+                    <Icon className="size-4" />
+                  </a>
+                )
+              })}
             </div>
           </div>
         </div>

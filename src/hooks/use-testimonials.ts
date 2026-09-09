@@ -17,17 +17,21 @@ export function useTestimonials() {
         return
       }
 
-      const { data, error } = await supabase
-        .from('testimonials')
-        .select('*')
-        .order('created_at', { ascending: false })
+      try {
+        const { data, error } = await supabase
+          .from('testimonials')
+          .select('*')
+          .order('created_at', { ascending: false })
 
-      if (cancelled) return
-
-      if (!error && data && data.length > 0) {
-        setTestimonials(data as Testimonial[])
+        if (cancelled) return
+        if (!error && data && data.length > 0) {
+          setTestimonials(data as Testimonial[])
+        }
+      } catch {
+        // Network/connection failure — keep the fallback testimonials.
+      } finally {
+        if (!cancelled) setLoading(false)
       }
-      setLoading(false)
     }
 
     load()

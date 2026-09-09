@@ -3,15 +3,17 @@ import { Download, Mail, MapPin, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Reveal } from '@/components/Reveal'
 import { SectionHeading } from '@/components/SectionHeading'
-import { site } from '@/data/site'
-
-const facts = [
-  { icon: User, label: 'Name', value: site.name },
-  { icon: Mail, label: 'Email', value: site.email },
-  { icon: MapPin, label: 'Location', value: site.location },
-]
+import { useSiteSettings } from '@/hooks/use-site-settings'
 
 export function About() {
+  const { settings: site } = useSiteSettings()
+
+  const facts = [
+    { icon: User, label: 'Name', value: site.name },
+    { icon: Mail, label: 'Email', value: site.email },
+    { icon: MapPin, label: 'Location', value: site.location },
+  ]
+
   return (
     <section id="about" className="container-px mx-auto max-w-6xl py-24">
       <SectionHeading
@@ -55,7 +57,7 @@ export function About() {
             ))}
             <div className="border-border bg-card flex items-center gap-3 rounded-xl border p-4">
               <span className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-full font-display text-sm font-bold">
-                {site.yearsExperience}+
+                {site.years_experience}+
               </span>
               <div>
                 <dt className="text-muted-foreground text-xs">Experience</dt>
@@ -65,7 +67,7 @@ export function About() {
           </dl>
 
           <Button size="lg" asChild className="w-fit gap-2">
-            <a href={site.resumeUrl} download>
+            <a href={site.resume_url} download>
               <Download className="size-4" />
               Download CV
             </a>

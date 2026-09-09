@@ -3,10 +3,12 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Menu, Moon, Sun, X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { Logo } from '@/components/Logo'
 import { cn } from '@/lib/utils'
 import { useDarkMode } from '@/hooks/use-dark-mode'
 import { useSectionNav } from '@/hooks/use-section-nav'
-import { navLinks, site } from '@/data/site'
+import { useSiteSettings } from '@/hooks/use-site-settings'
+import { navLinks } from '@/data/site'
 
 export function Navbar() {
   const [scrolled, setScrolled] = React.useState(false)
@@ -14,6 +16,7 @@ export function Navbar() {
   const [active, setActive] = React.useState('')
   const { theme, toggle } = useDarkMode()
   const { goToSection } = useSectionNav()
+  const { settings: site } = useSiteSettings()
 
   React.useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12)
@@ -61,10 +64,8 @@ export function Navbar() {
             e.preventDefault()
             handleNavClick('#top')
           }}
-          className="font-display text-lg font-bold"
         >
-          {site.shortName}
-          <span className="text-primary">.</span>
+          <Logo text={site.logo_text} imageUrl={site.logo_image_url} />
         </a>
 
         <ul className="hidden items-center gap-1 md:flex">

@@ -3,14 +3,7 @@ import { useInView } from 'framer-motion'
 import { Award, Briefcase, Smile, Timer } from 'lucide-react'
 
 import { useCounter } from '@/hooks/use-counter'
-import { site } from '@/data/site'
-
-const stats = [
-  { icon: Briefcase, label: 'Projects Completed', value: site.projectsCompleted, suffix: '+' },
-  { icon: Smile, label: 'Happy Clients', value: site.happyClients, suffix: '+' },
-  { icon: Timer, label: 'Years Experience', value: site.yearsExperience, suffix: '+' },
-  { icon: Award, label: 'Awards Won', value: site.awardsWon, suffix: '' },
-]
+import { useSiteSettings } from '@/hooks/use-site-settings'
 
 function StatItem({
   icon: Icon,
@@ -18,7 +11,13 @@ function StatItem({
   value,
   suffix,
   inView,
-}: (typeof stats)[number] & { inView: boolean }) {
+}: {
+  icon: typeof Briefcase
+  label: string
+  value: number
+  suffix: string
+  inView: boolean
+}) {
   const count = useCounter(value, inView)
 
   return (
@@ -36,8 +35,16 @@ function StatItem({
 }
 
 export function Stats() {
+  const { settings: site } = useSiteSettings()
   const ref = React.useRef<HTMLDivElement>(null)
   const inView = useInView(ref, { once: true, margin: '-50px' })
+
+  const stats = [
+    { icon: Briefcase, label: 'Projects Completed', value: site.projects_completed, suffix: '+' },
+    { icon: Smile, label: 'Happy Clients', value: site.happy_clients, suffix: '+' },
+    { icon: Timer, label: 'Years Experience', value: site.years_experience, suffix: '+' },
+    { icon: Award, label: 'Awards Won', value: site.awards_won, suffix: '' },
+  ]
 
   return (
     <section ref={ref} className="bg-primary py-20">

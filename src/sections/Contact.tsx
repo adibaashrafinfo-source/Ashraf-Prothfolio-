@@ -10,17 +10,15 @@ import { Textarea } from '@/components/ui/textarea'
 import { Reveal } from '@/components/Reveal'
 import { SectionHeading } from '@/components/SectionHeading'
 import { useToast } from '@/hooks/use-toast'
+import { useSiteSettings } from '@/hooks/use-site-settings'
+import { useSocialLinks } from '@/hooks/use-social-links'
 import { contactSchema, type ContactFormValues } from '@/lib/contactSchema'
+import { socialIconMap } from '@/lib/socialIcons'
 import { supabase } from '@/lib/supabaseClient'
-import { site } from '@/data/site'
-
-const contactInfo = [
-  { icon: Mail, label: 'Email', value: site.email, href: `mailto:${site.email}` },
-  { icon: Phone, label: 'Phone', value: site.phone, href: `tel:${site.phone.replace(/\s+/g, '')}` },
-  { icon: MapPin, label: 'Location', value: site.location, href: null },
-]
 
 export function Contact() {
+  const { settings: site } = useSiteSettings()
+  const { links: social } = useSocialLinks()
   const { toast } = useToast()
   const {
     register,
@@ -28,6 +26,17 @@ export function Contact() {
     reset,
     formState: { errors, isSubmitting },
   } = useForm<ContactFormValues>({ resolver: zodResolver(contactSchema) })
+
+  const contactInfo = [
+    { icon: Mail, label: 'Email', value: site.email, href: `mailto:${site.email}` },
+    {
+      icon: Phone,
+      label: 'Phone',
+      value: site.phone,
+      href: `tel:${site.phone.replace(/\s+/g, '')}`,
+    },
+    { icon: MapPin, label: 'Location', value: site.location, href: null },
+  ]
 
   const onSubmit = React.useCallback(
     async (values: ContactFormValues) => {
@@ -153,25 +162,28 @@ export function Contact() {
               </div>
             ))}
             <div className="flex gap-3 pt-2">
-              {site.social.map((s) => (
-                <a
-                  key={s.name}
-                  href={s.href}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  aria-label={s.name}
-                  className="border-border bg-background hover:bg-primary hover:text-primary-foreground hover:border-primary flex size-9 items-center justify-center rounded-full border transition-colors"
-                >
-                  <s.icon className="size-4" />
-                </a>
-              ))}
+              {social.map((s) => {
+                const Icon = socialIconMap[s.icon]
+                return (
+                  <a
+                    key={s.id}
+                    href={s.href}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    aria-label={s.name}
+                    className="border-border bg-background hover:bg-primary hover:text-primary-foreground hover:border-primary flex size-9 items-center justify-center rounded-full border transition-colors"
+                  >
+                    <Icon className="size-4" />
+                  </a>
+                )
+              })}
             </div>
           </div>
 
           <div className="border-border overflow-hidden rounded-2xl border shadow-sm">
             <iframe
               title="Location map"
-              src={site.mapEmbedSrc}
+              src={site.map_embed_src}
               width="100%"
               height="220"
               loading="lazy"

@@ -3,9 +3,11 @@ import { ArrowRight, Download, Sparkles } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { TechBackground } from '@/components/TechBackground'
-import { site } from '@/data/site'
+import { useSiteSettings } from '@/hooks/use-site-settings'
 
 export function Hero() {
+  const { settings: site } = useSiteSettings()
+
   const scrollTo = (href: string) => {
     document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' })
   }
@@ -51,7 +53,7 @@ export function Hero() {
               <ArrowRight className="size-4" />
             </Button>
             <Button size="lg" variant="outline" asChild className="gap-2">
-              <a href={site.resumeUrl} download>
+              <a href={site.resume_url} download>
                 <Download className="size-4" />
                 Download CV
               </a>
@@ -79,7 +81,7 @@ export function Hero() {
           <div className="border-border bg-card absolute -bottom-6 -left-6 flex items-center gap-3 rounded-2xl border p-4 shadow-lg">
             <div className="text-center">
               <p className="font-display text-primary text-2xl font-bold">
-                {site.yearsExperience}+
+                {site.years_experience}+
               </p>
               <p className="text-muted-foreground text-xs whitespace-nowrap">Years Experience</p>
             </div>

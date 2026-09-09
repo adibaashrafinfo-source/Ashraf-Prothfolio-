@@ -1,11 +1,15 @@
 import * as React from 'react'
 
 import { supabase } from '@/lib/supabaseClient'
-import { fallbackProjects } from '@/data/projects'
-import type { Project } from '@/types'
+import { defaultSocialLinks } from '@/data/site'
+import type { SocialLink } from '@/types'
 
-export function useProjects() {
-  const [projects, setProjects] = React.useState<Project[]>(fallbackProjects)
+type FallbackLink = Pick<SocialLink, 'name' | 'icon' | 'href' | 'sort_order'>
+
+export function useSocialLinks() {
+  const [links, setLinks] = React.useState<Array<FallbackLink & { id: string }>>(
+    defaultSocialLinks.map((link, i) => ({ ...link, id: `fallback-${i}` })),
+  )
   const [loading, setLoading] = React.useState(true)
 
   React.useEffect(() => {
@@ -19,16 +23,16 @@ export function useProjects() {
 
       try {
         const { data, error } = await supabase
-          .from('projects')
+          .from('social_links')
           .select('*')
-          .order('created_at', { ascending: false })
+          .order('sort_order', { ascending: true })
 
         if (cancelled) return
         if (!error && data && data.length > 0) {
-          setProjects(data as Project[])
+          setLinks(data as SocialLink[])
         }
       } catch {
-        // Network/connection failure — keep the fallback projects.
+        // Network/connection failure — keep the default links.
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -40,5 +44,5 @@ export function useProjects() {
     }
   }, [])
 
-  return { projects, loading }
+  return { links, loading }
 }
