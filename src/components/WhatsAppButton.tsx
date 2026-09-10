@@ -1,6 +1,9 @@
 import { motion } from 'framer-motion'
 
 import { useSocialLinks } from '@/hooks/use-social-links'
+import { defaultSocialLinks } from '@/data/site'
+
+const fallbackWhatsApp = defaultSocialLinks.find((l) => l.icon === 'whatsapp')
 
 function WhatsAppIcon({ className }: { className?: string }) {
   return (
@@ -12,7 +15,7 @@ function WhatsAppIcon({ className }: { className?: string }) {
 
 export function WhatsAppButton() {
   const { links } = useSocialLinks()
-  const whatsapp = links.find((l) => l.icon === 'whatsapp')
+  const whatsapp = links.find((l) => l.icon === 'whatsapp') ?? fallbackWhatsApp
 
   if (!whatsapp) return null
 
