@@ -40,6 +40,7 @@ export interface SiteSettings {
   short_name: string
   title: string
   tagline: string
+  short_bio: string
   about: string
   years_experience: number
   projects_completed: number

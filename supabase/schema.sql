@@ -42,6 +42,7 @@ create table if not exists site_settings (
   short_name text not null default 'Arif',
   title text not null default 'Founder & CEO, Abrar IT',
   tagline text not null default '',
+  short_bio text not null default '',
   about text not null default '',
   years_experience int not null default 0,
   projects_completed int not null default 0,
@@ -59,6 +60,9 @@ create table if not exists site_settings (
 
 insert into site_settings (id) values ('default')
   on conflict (id) do nothing;
+
+-- Adds short_bio to a site_settings table created before this column existed.
+alter table site_settings add column if not exists short_bio text not null default '';
 
 create table if not exists social_links (
   id uuid primary key default gen_random_uuid(),

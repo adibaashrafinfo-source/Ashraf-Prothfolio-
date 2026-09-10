@@ -5,6 +5,8 @@ export const defaultSiteSettings: Omit<SiteSettings, 'id' | 'updated_at'> = {
   short_name: 'Arif',
   title: 'Founder & CEO, Abrar IT',
   tagline: 'I help brands grow with design, code, and marketing that convert.',
+  short_bio:
+    'Founder of Abrar IT, based in Dhaka — I design brands, build fast web products, and run growth campaigns that turn attention into real business results.',
   about:
     "I'm Ashraful Islam, founder and CEO of Abrar IT — a creative technology studio based in Dhaka. Over the past several years I've helped startups and local businesses turn ideas into polished brands, fast websites, and marketing campaigns that actually move the needle. My work sits at the intersection of graphic design, web development, and digital marketing, which means every project I touch is built to look great, run fast, and grow on purpose.",
   years_experience: 10,

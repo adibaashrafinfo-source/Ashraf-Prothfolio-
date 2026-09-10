@@ -38,6 +38,9 @@ export function About() {
         </Reveal>
 
         <Reveal delay={0.1} className="flex flex-col gap-6">
+          <p className="font-display text-foreground text-lg leading-snug font-semibold sm:text-xl">
+            {site.short_bio}
+          </p>
           <p className="text-muted-foreground text-base leading-relaxed sm:text-lg">{site.about}</p>
 
           <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">

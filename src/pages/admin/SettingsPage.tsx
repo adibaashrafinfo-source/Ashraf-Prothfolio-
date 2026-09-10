@@ -126,6 +126,14 @@ export function SettingsPage() {
             />
           </div>
           <div className="flex flex-col gap-1.5 sm:col-span-2">
+            <Label htmlFor="short_bio">Short bio (Hero &amp; About intro line)</Label>
+            <Textarea
+              id="short_bio"
+              value={form.short_bio}
+              onChange={(e) => set('short_bio', e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col gap-1.5 sm:col-span-2">
             <Label htmlFor="about">About paragraph</Label>
             <Textarea
               id="about"

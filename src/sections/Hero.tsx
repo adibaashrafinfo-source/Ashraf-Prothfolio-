@@ -18,13 +18,17 @@ export function Hero() {
       className="bg-grid relative flex min-h-screen items-center overflow-hidden pt-24"
     >
       <div className="from-background via-background/95 to-background pointer-events-none absolute inset-0 bg-gradient-to-b" />
-      <div
+      <motion.div
         aria-hidden
         className="bg-primary/25 pointer-events-none absolute top-1/4 -left-32 size-96 rounded-full blur-3xl"
+        animate={{ x: [0, 40, -10, 0], y: [0, -20, 30, 0], scale: [1, 1.15, 0.95, 1] }}
+        transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
       />
-      <div
+      <motion.div
         aria-hidden
         className="bg-accent/60 pointer-events-none absolute right-0 bottom-0 size-96 rounded-full blur-3xl"
+        animate={{ x: [0, -30, 20, 0], y: [0, 25, -15, 0], scale: [1, 1.1, 1.2, 1] }}
+        transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
       />
       <TechBackground />
 
@@ -45,7 +49,7 @@ export function Hero() {
             <span className="text-primary">{site.tagline}</span>
           </h1>
 
-          <p className="text-muted-foreground max-w-xl text-lg leading-relaxed">{site.about}</p>
+          <p className="text-muted-foreground max-w-xl text-lg leading-relaxed">{site.short_bio}</p>
 
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button size="lg" onClick={() => scrollTo('#portfolio')} className="gap-2">
@@ -67,7 +71,15 @@ export function Hero() {
           transition={{ duration: 0.7, ease: 'easeOut', delay: 0.15 }}
           className="relative mx-auto w-full max-w-sm"
         >
-          <div className="from-primary/40 to-accent/40 absolute inset-4 -z-10 rounded-[2.5rem] bg-gradient-to-br blur-2xl" />
+          <motion.div
+            aria-hidden
+            className="from-primary/50 via-accent/40 to-primary/50 absolute -inset-6 -z-10 rounded-[2.5rem] bg-gradient-to-br blur-2xl"
+            animate={{ rotate: 360, scale: [1, 1.08, 1] }}
+            transition={{
+              rotate: { duration: 22, repeat: Infinity, ease: 'linear' },
+              scale: { duration: 6, repeat: Infinity, ease: 'easeInOut' },
+            }}
+          />
           <div className="border-border bg-card overflow-hidden rounded-[2rem] border shadow-xl">
             <img
               src="/profile.jpg"
