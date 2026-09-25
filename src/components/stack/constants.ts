@@ -15,25 +15,19 @@ export const PEEK_OFFSET_MOBILE = 12
 /** Stop increasing the peek stagger after this many cards. */
 export const MAX_PEEK_STEPS = 5
 
-/** Per-card scale lost once fully covered (desktop). */
-export const SCALE_STEP = 0.04
+/** Scale a card settles at once the next card has fully covered it (desktop). */
+export const MIN_SCALE = 0.82
 
-/** Floor for how small a covered card can shrink (desktop). */
-export const MIN_SCALE = 0.85
-
-/** Per-card scale lost once fully covered (mobile — spec calls for a much smaller drop). */
-export const SCALE_STEP_MOBILE = 0.0125
-
-/** Floor for how small a covered card can shrink (mobile). */
-export const MIN_SCALE_MOBILE = 0.95
+/** Same idea as MIN_SCALE, but subtler for small screens. */
+export const MIN_SCALE_MOBILE = 0.92
 
 /** 3D backward lean applied to a fully-covered card (desktop only). */
-export const MAX_ROTATE_X = 6
+export const MAX_ROTATE_X = 10
 
 /** Dimming applied to a fully-covered card via brightness filter. */
-export const MIN_BRIGHTNESS = 0.85
+export const MIN_BRIGHTNESS = 0.7
 
 /** Text-column opacity once a card is fully covered. */
-export const MIN_CONTENT_OPACITY = 0.6
+export const MIN_CONTENT_OPACITY = 0.4
 
 export const SPRING_CONFIG = { stiffness: 120, damping: 24, mass: 0.4 }

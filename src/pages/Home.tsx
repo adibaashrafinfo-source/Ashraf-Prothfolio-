@@ -12,7 +12,9 @@ import { ServicesContent } from '@/sections/stack/ServicesContent'
 import { PortfolioContent } from '@/sections/stack/PortfolioContent'
 import { StatsContent } from '@/sections/stack/StatsContent'
 import { TestimonialsContent } from '@/sections/stack/TestimonialsContent'
-import { useProjects } from '@/hooks/use-projects'
+import { SkillsCover } from '@/sections/stack/covers/SkillsCover'
+import { ServicesCover } from '@/sections/stack/covers/ServicesCover'
+import { PortfolioCover } from '@/sections/stack/covers/PortfolioCover'
 
 const STACK_CARDS = [
   { id: 'about', title: 'Design-minded builder, growth-focused thinker', tag: 'About' },
@@ -27,7 +29,6 @@ export function Home() {
   const location = useLocation()
   const heroRef = React.useRef<HTMLDivElement>(null)
   const reduceMotion = useReducedMotion()
-  const { projects } = useProjects()
 
   const { scrollYProgress: heroProgress } = useScroll({
     target: heroRef,
@@ -45,8 +46,6 @@ export function Home() {
       document.querySelector(location.hash)?.scrollIntoView({ behavior: 'smooth' })
     }
   }, [location.hash])
-
-  const featuredProjectImage = projects[0]?.image_url
 
   return (
     <>
@@ -73,7 +72,7 @@ export function Home() {
           meta="Section 02 · Skills"
           title={STACK_CARDS[1].title}
           tag={STACK_CARDS[1].tag}
-          cover={{ type: 'gradient', className: 'liquid-mesh liquid-violet' }}
+          cover={{ type: 'custom', render: <SkillsCover /> }}
           onMore={scrollToNext}
         >
           <SkillsContent />
@@ -85,7 +84,7 @@ export function Home() {
           meta="Section 03 · Services"
           title={STACK_CARDS[2].title}
           tag={STACK_CARDS[2].tag}
-          cover={{ type: 'gradient', className: 'liquid-mesh liquid-teal' }}
+          cover={{ type: 'custom', render: <ServicesCover /> }}
           onMore={scrollToNext}
         >
           <ServicesContent />
@@ -97,11 +96,7 @@ export function Home() {
           meta="Section 04 · Portfolio"
           title={STACK_CARDS[3].title}
           tag={STACK_CARDS[3].tag}
-          cover={
-            featuredProjectImage
-              ? { type: 'image', src: featuredProjectImage, alt: 'Featured project' }
-              : { type: 'gradient', className: 'liquid-mesh liquid-blue' }
-          }
+          cover={{ type: 'custom', render: <PortfolioCover /> }}
           onMore={scrollToNext}
         >
           <PortfolioContent />

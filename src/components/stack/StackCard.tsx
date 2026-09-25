@@ -14,11 +14,13 @@ import {
 } from '@/components/stack/constants'
 
 export interface StackCardCover {
-  type: 'image' | 'video' | 'gradient'
+  type: 'image' | 'video' | 'gradient' | 'custom'
   src?: string
   /** For type "gradient": one of the `.liquid-*` utility classes in index.css. */
   className?: string
   alt?: string
+  /** For type "custom": a content-aware animated visual (e.g. floating icons, a carousel). */
+  render?: React.ReactNode
 }
 
 interface StackCardProps {
@@ -55,6 +57,8 @@ function CoverVisual({ cover, coverScale, coverY, reduceMotion }: {
         playsInline
         className="size-full object-cover"
       />
+    ) : cover.type === 'custom' ? (
+      cover.render
     ) : (
       <div className={cn('size-full', cover.className)} />
     )
