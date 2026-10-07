@@ -85,9 +85,13 @@ There are two ways to edit content, and both work together:
 Run [`supabase/schema.sql`](./supabase/schema.sql) once in your Supabase project's SQL Editor
 (Dashboard → SQL Editor → New query → paste the file → Run). It creates every table the site and
 admin panel need (`projects`, `testimonials`, `contact_submissions`, `site_settings`,
-`social_links`), a public `media` storage bucket for uploaded images, and Row Level Security
-policies so visitors can only read content and submit the contact form, while a signed-in admin
-can manage everything. It's safe to re-run.
+`social_links`, `client_logos`, `business_documents`), a public `media` storage bucket for
+uploaded images, and Row Level Security policies so visitors can only read content and submit the
+contact form, while a signed-in admin can manage everything. It's safe to re-run.
+
+**Already have an older version of the schema?** Re-run the same file. It adds the newer pieces
+(the CRM columns on `contact_submissions`, the `client_logos` table, and the
+`business_documents` table behind quotations and invoices) without touching existing rows.
 
 ## Admin panel
 
@@ -99,10 +103,23 @@ code:
   image).
 - **Social Links** — add, edit, reorder, or remove social/contact links shown in the footer and
   contact section.
-- **Portfolio** — add, edit, or delete projects, with drag-and-drop-free image upload straight
-  to Supabase Storage.
+- **Portfolio** — add, edit, or delete projects across E-Commerce, SaaS Dashboard, Business
+  Website, Apps, and Software. Paste the live website link and the card thumbnail is captured
+  from that site's own hero automatically; clicking the card opens the live site. Uploading an
+  image overrides the automatic capture.
+- **Clients** — upload client logos for the scrolling strip under the hero. Any logo size works:
+  each one is fitted whole into the strip, in its original colors.
 - **Testimonials** — add, edit, or delete client testimonials.
-- **Messages** — read and delete everything submitted through the public contact form.
+- **Leads** — every contact-form submission as a CRM record: status (new, contacted, in progress,
+  confirmed, converted, important, cancelled), company and phone, project name and type, progress
+  percentage, project cost and currency, follow-up date, and internal notes. The header totals
+  open pipeline and won value.
+- **Quotations / Invoices** — build a quotation from scratch or straight off a lead, with line
+  items, discount, tax, validity, and terms. **Generate copy** turns rough notes into
+  client-ready scope and terms text, three premium templates (Modern, Minimal, Bold) are
+  switchable at any time, **Print / PDF** saves the document, and **Make invoice** clones an
+  accepted quotation into an invoice that tracks its due date and paid amount. Your logo and
+  contact details come from Site Settings.
 
 ### Setting up your admin login
 

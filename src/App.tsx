@@ -10,8 +10,11 @@ import { Dashboard } from '@/pages/admin/Dashboard'
 import { SettingsPage } from '@/pages/admin/SettingsPage'
 import { SocialLinksPage } from '@/pages/admin/SocialLinksPage'
 import { PortfolioAdmin } from '@/pages/admin/PortfolioAdmin'
+import { ClientLogosPage } from '@/pages/admin/ClientLogosPage'
 import { TestimonialsAdmin } from '@/pages/admin/TestimonialsAdmin'
-import { MessagesPage } from '@/pages/admin/MessagesPage'
+import { LeadsPage } from '@/pages/admin/LeadsPage'
+import { DocumentsListPage } from '@/pages/admin/DocumentsListPage'
+import { DocumentEditPage } from '@/pages/admin/DocumentEditPage'
 
 function App() {
   return (
@@ -28,8 +31,14 @@ function App() {
           <Route path="/admin/settings" element={<SettingsPage />} />
           <Route path="/admin/social" element={<SocialLinksPage />} />
           <Route path="/admin/portfolio" element={<PortfolioAdmin />} />
+          <Route path="/admin/clients" element={<ClientLogosPage />} />
           <Route path="/admin/testimonials" element={<TestimonialsAdmin />} />
-          <Route path="/admin/messages" element={<MessagesPage />} />
+          <Route path="/admin/leads" element={<LeadsPage />} />
+          <Route path="/admin/quotations" element={<DocumentsListPage kind="quotation" />} />
+          <Route path="/admin/quotations/new" element={<DocumentEditPage newKind="quotation" />} />
+          <Route path="/admin/invoices" element={<DocumentsListPage kind="invoice" />} />
+          <Route path="/admin/invoices/new" element={<DocumentEditPage newKind="invoice" />} />
+          <Route path="/admin/documents/:id" element={<DocumentEditPage />} />
         </Route>
       </Route>
     </Routes>

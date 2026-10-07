@@ -151,3 +151,27 @@
     background-size: 40px 40px;
   }
 }
+
+/* Printing a quotation/invoice: drop the admin chrome and let the document
+   itself fill the page, keeping its own colors. */
+@media print {
+  @page {
+    margin: 12mm;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .print-area {
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+  }
+
+  .print-area,
+  .print-area * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

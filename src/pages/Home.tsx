@@ -2,6 +2,7 @@ import * as React from 'react'
 import { useLocation } from 'react-router-dom'
 
 import { Hero } from '@/sections/Hero'
+import { ClientLogos } from '@/sections/ClientLogos'
 import { About } from '@/sections/About'
 import { Skills } from '@/sections/Skills'
 import { Services } from '@/sections/Services'
@@ -22,6 +23,7 @@ export function Home() {
   return (
     <>
       <Hero />
+      <ClientLogos />
       <About />
       <Skills />
       <Services />

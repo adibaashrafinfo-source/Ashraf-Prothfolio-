@@ -11,6 +11,8 @@ import { ImageUploadField } from '@/components/admin/ImageUploadField'
 import { useAdminTable } from '@/hooks/use-admin-table'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabaseClient'
+import { projectThumbnail } from '@/lib/siteThumbnail'
+import { PROJECT_CATEGORIES } from '@/types'
 import type { Project, ProjectCategory } from '@/types'
 
 type FormState = {
@@ -64,11 +66,11 @@ export function PortfolioAdmin() {
   const save = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!supabase) return
-    if (!form.image_url) {
+    if (!form.image_url && !form.project_url) {
       toast({
         variant: 'destructive',
-        title: 'Image required',
-        description: 'Upload a project image first.',
+        title: 'Image or link required',
+        description: 'Add the live website link to auto-capture a thumbnail, or upload an image.',
       })
       return
     }
@@ -166,8 +168,11 @@ export function PortfolioAdmin() {
                       setForm((f) => ({ ...f, category: e.target.value as ProjectCategory }))
                     }
                   >
-                    <option value="E-Commerce">E-Commerce</option>
-                    <option value="Software">Software</option>
+                    {PROJECT_CATEGORIES.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -183,16 +188,32 @@ export function PortfolioAdmin() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="p-url">Live project URL (optional)</Label>
+                <Label htmlFor="p-url">Live website link</Label>
                 <Input
                   id="p-url"
+                  placeholder="https://client-site.com"
                   value={form.project_url}
                   onChange={(e) => setForm((f) => ({ ...f, project_url: e.target.value }))}
                 />
+                <p className="text-muted-foreground text-xs">
+                  Add the link and the site&apos;s own hero is captured as the card thumbnail
+                  automatically. Clicking the card opens this link.
+                </p>
               </div>
 
+              {!form.image_url && form.project_url && (
+                <div className="flex flex-col gap-1.5">
+                  <Label>Auto thumbnail preview</Label>
+                  <img
+                    src={projectThumbnail({ image_url: '', project_url: form.project_url })}
+                    alt=""
+                    className="border-border aspect-video w-full max-w-xs rounded-lg border object-cover object-top"
+                  />
+                </div>
+              )}
+
               <ImageUploadField
-                label="Project image"
+                label="Custom image (optional — overrides the auto thumbnail)"
                 folder="projects"
                 value={form.image_url || null}
                 onChange={(url) => setForm((f) => ({ ...f, image_url: url ?? '' }))}
@@ -225,9 +246,9 @@ export function PortfolioAdmin() {
               className="border-border bg-card overflow-hidden rounded-xl border"
             >
               <img
-                src={project.image_url}
+                src={projectThumbnail(project)}
                 alt={project.title}
-                className="aspect-video w-full object-cover"
+                className="aspect-video w-full object-cover object-top"
               />
               <div className="flex flex-col gap-2 p-4">
                 <Badge>{project.category}</Badge>

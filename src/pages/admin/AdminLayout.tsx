@@ -9,11 +9,14 @@ import { cn } from '@/lib/utils'
 
 const adminLinks = [
   { label: 'Dashboard', to: '/admin' },
-  { label: 'Site Settings', to: '/admin/settings' },
-  { label: 'Social Links', to: '/admin/social' },
+  { label: 'Leads', to: '/admin/leads' },
+  { label: 'Quotations', to: '/admin/quotations' },
+  { label: 'Invoices', to: '/admin/invoices' },
   { label: 'Portfolio', to: '/admin/portfolio' },
+  { label: 'Clients', to: '/admin/clients' },
   { label: 'Testimonials', to: '/admin/testimonials' },
-  { label: 'Messages', to: '/admin/messages' },
+  { label: 'Social Links', to: '/admin/social' },
+  { label: 'Site Settings', to: '/admin/settings' },
 ]
 
 export function AdminLayout() {
@@ -28,13 +31,13 @@ export function AdminLayout() {
 
   return (
     <div className="bg-secondary/30 min-h-screen">
-      <header className="border-border bg-background border-b">
+      <header className="border-border bg-background border-b print:hidden">
         <div className="container-px mx-auto flex h-16 max-w-6xl items-center justify-between">
           <span className="font-display text-lg font-bold">
             Admin<span className="text-primary">.</span>
           </span>
 
-          <nav className="hidden items-center gap-1 md:flex">
+          <nav className="hidden items-center gap-0.5 xl:flex">
             {adminLinks.map((link) => (
               <NavLink
                 key={link.to}
@@ -72,7 +75,7 @@ export function AdminLayout() {
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden"
+              className="xl:hidden"
               aria-label="Toggle menu"
               onClick={() => setOpen((v) => !v)}
             >
@@ -82,7 +85,7 @@ export function AdminLayout() {
         </div>
 
         {open && (
-          <nav className="border-border container-px mx-auto flex max-w-6xl flex-col gap-1 border-t py-3 md:hidden">
+          <nav className="border-border container-px mx-auto flex max-w-6xl flex-col gap-1 border-t py-3 xl:hidden">
             {adminLinks.map((link) => (
               <NavLink
                 key={link.to}
@@ -120,7 +123,7 @@ export function AdminLayout() {
         )}
       </header>
 
-      <main className="container-px mx-auto max-w-6xl py-10">
+      <main className="container-px mx-auto max-w-6xl py-10 print:max-w-none print:p-0">
         <Outlet />
       </main>
       <Toaster />

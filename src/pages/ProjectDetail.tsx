@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Reveal } from '@/components/Reveal'
 import { useProjects } from '@/hooks/use-projects'
+import { projectThumbnail } from '@/lib/siteThumbnail'
 
 export function ProjectDetail() {
   const { id } = useParams<{ id: string }>()
@@ -54,10 +55,10 @@ export function ProjectDetail() {
           className="border-border bg-card mt-8 overflow-hidden rounded-2xl border shadow-sm"
         >
           <img
-            src={project.image_url}
+            src={projectThumbnail(project)}
             alt={project.title}
             loading="eager"
-            className="aspect-16/9 w-full object-cover"
+            className="aspect-16/9 w-full object-cover object-top"
           />
         </Reveal>
 
