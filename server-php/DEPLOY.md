@@ -77,14 +77,21 @@ folder's permissions to `755` (File Manager → right-click `uploads` → **Chan
 
 ## 6. Create your admin login
 
-From cPanel's **Terminal** (Advanced section) or SSH, `cd` into the folder and run:
+**Easiest — no Terminal/SSH needed:** visit `https://your-domain.com/api/setup.php` in a
+browser. It shows a simple form (email, password, confirm) and creates the admin account on
+submit. It only works once — the moment an admin account exists, the page permanently shows
+"already exists" and does nothing else, so there's no secret to manage or step to forget. Delete
+`setup.php` afterward if you like, though it's harmless to leave since it's already inert.
+
+**Alternative — if you do have Terminal/SSH access:** `cd` into the folder and run:
 
 ```bash
 cd public_html/api   # or wherever you uploaded it
 php create_admin.php you@example.com "a-strong-password"
 ```
 
-Run it again any time with the same email to reset that password.
+This one can also be run again later with the same email to reset that password — `setup.php`
+cannot (it only ever creates the *first* admin).
 
 ## 7. Test it
 

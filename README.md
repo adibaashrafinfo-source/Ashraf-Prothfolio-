@@ -128,12 +128,10 @@ code:
 
 1. Deploy `server-php/` and import `schema.sql` (see
    [`server-php/DEPLOY.md`](./server-php/DEPLOY.md)) if you haven't already.
-2. From your hosting's Terminal (or SSH), inside the `server-php` folder, run:
-   ```bash
-   php create_admin.php you@example.com "a-strong-password"
-   ```
-   (There is no public sign-up page — accounts are created this way on purpose, so a stranger
-   can't register their own admin access.)
+2. Visit `https://your-domain.com/api/setup.php` in a browser — a one-time form that creates
+   your admin account. It only works until the first admin exists, then permanently disables
+   itself, so no secret or Terminal access is needed. (Have Terminal/SSH access instead? Run
+   `php create_admin.php you@example.com "a-strong-password"` from inside `server-php/`.)
 3. Visit `/admin/login` on your deployed site (or `http://localhost:5173/admin/login` locally)
    and sign in with that email and password.
 
