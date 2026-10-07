@@ -20,6 +20,7 @@ export function Contact() {
   const { settings: site } = useSiteSettings()
   const { links: social } = useSocialLinks()
   const { toast } = useToast()
+  const [fallback, setFallback] = React.useState<ContactFormValues | null>(null)
   const {
     register,
     handleSubmit,
@@ -40,27 +41,31 @@ export function Contact() {
 
   const onSubmit = React.useCallback(
     async (values: ContactFormValues) => {
+      const failed = (description: string) => {
+        console.error('[contact] submission failed:', description)
+        toast({ variant: 'destructive', title: 'Message not sent', description })
+        setFallback(values)
+      }
+
       if (!supabase) {
-        toast({
-          variant: 'destructive',
-          title: 'Not configured',
-          description:
-            'Supabase is not connected yet — please try again later or email me directly.',
-        })
+        failed('The contact form is not connected yet. Please email or WhatsApp me instead.')
         return
       }
 
-      const { error } = await supabase.from('contact_submissions').insert(values)
-
-      if (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Something went wrong',
-          description: 'Your message could not be sent. Please try again in a moment.',
-        })
+      try {
+        // Without this try/catch a network/CORS failure rejects and the form
+        // silently does nothing, so the sender never learns it failed.
+        const { error } = await supabase.from('contact_submissions').insert(values)
+        if (error) {
+          failed(error.message)
+          return
+        }
+      } catch (err) {
+        failed(err instanceof Error ? err.message : 'Could not reach the server.')
         return
       }
 
+      setFallback(null)
       toast({
         title: 'Message sent!',
         description: "Thanks for reaching out — I'll get back to you soon.",
@@ -139,6 +144,43 @@ export function Contact() {
               )}
               {isSubmitting ? 'Sending...' : 'Send Message'}
             </Button>
+
+            {fallback && (
+              <div className="border-destructive/40 bg-destructive/5 flex flex-col gap-3 rounded-xl border p-4">
+                <p className="text-sm font-medium">
+                  The form could not reach the server, so your message was not saved.
+                </p>
+                <p className="text-muted-foreground text-sm">
+                  Send it directly instead — your text is already filled in.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button asChild size="sm" variant="outline" className="gap-2">
+                    <a
+                      href={`mailto:${site.email}?subject=${encodeURIComponent(
+                        fallback.subject,
+                      )}&body=${encodeURIComponent(
+                        `${fallback.message}\n\n— ${fallback.name} (${fallback.email})`,
+                      )}`}
+                    >
+                      <Mail className="size-4" />
+                      Email instead
+                    </a>
+                  </Button>
+                  {site.phone && (
+                    <Button asChild size="sm" variant="outline" className="gap-2">
+                      <a
+                        href={`https://wa.me/${site.phone.replace(/\D/g, '').replace(/^0/, '88')}`}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                      >
+                        <Phone className="size-4" />
+                        WhatsApp instead
+                      </a>
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
           </form>
         </Reveal>
 
