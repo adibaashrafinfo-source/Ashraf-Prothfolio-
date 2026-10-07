@@ -10,7 +10,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { ImageUploadField } from '@/components/admin/ImageUploadField'
 import { useAdminTable } from '@/hooks/use-admin-table'
 import { useToast } from '@/hooks/use-toast'
-import { supabase } from '@/lib/supabaseClient'
+import { ApiError, apiDelete, apiPost, apiPut } from '@/lib/apiClient'
 import { projectThumbnail } from '@/lib/siteThumbnail'
 import { PROJECT_CATEGORIES } from '@/types'
 import type { Project, ProjectCategory } from '@/types'
@@ -32,7 +32,7 @@ const emptyForm: FormState = {
 }
 
 export function PortfolioAdmin() {
-  const { rows, loading, refetch } = useAdminTable<Project>('projects')
+  const { rows, loading, refetch } = useAdminTable<Project>('/projects')
   const { toast } = useToast()
   const [editingId, setEditingId] = React.useState<string | null>(null)
   const [form, setForm] = React.useState<FormState>(emptyForm)
@@ -65,7 +65,6 @@ export function PortfolioAdmin() {
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!supabase) return
     if (!form.image_url && !form.project_url) {
       toast({
         variant: 'destructive',
@@ -85,13 +84,10 @@ export function PortfolioAdmin() {
     }
 
     try {
-      const { error } = editingId
-        ? await supabase.from('projects').update(payload).eq('id', editingId)
-        : await supabase.from('projects').insert(payload)
-
-      if (error) {
-        toast({ variant: 'destructive', title: 'Could not save', description: error.message })
-        return
+      if (editingId) {
+        await apiPut(`/projects/${editingId}`, payload)
+      } else {
+        await apiPost('/projects', payload)
       }
       toast({ title: editingId ? 'Project updated' : 'Project added' })
       cancel()
@@ -100,7 +96,7 @@ export function PortfolioAdmin() {
       toast({
         variant: 'destructive',
         title: 'Could not save',
-        description: err instanceof Error ? err.message : 'Could not reach the server.',
+        description: err instanceof ApiError ? err.message : 'Could not reach the server.',
       })
     } finally {
       setSaving(false)
@@ -108,19 +104,15 @@ export function PortfolioAdmin() {
   }
 
   const remove = async (id: string) => {
-    if (!supabase || !window.confirm('Delete this project?')) return
+    if (!window.confirm('Delete this project?')) return
     try {
-      const { error } = await supabase.from('projects').delete().eq('id', id)
-      if (error) {
-        toast({ variant: 'destructive', title: 'Could not delete', description: error.message })
-        return
-      }
+      await apiDelete(`/projects/${id}`)
       refetch()
     } catch (err) {
       toast({
         variant: 'destructive',
         title: 'Could not delete',
-        description: err instanceof Error ? err.message : 'Could not reach the server.',
+        description: err instanceof ApiError ? err.message : 'Could not reach the server.',
       })
     }
   }

@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useAdminTable } from '@/hooks/use-admin-table'
 import { useToast } from '@/hooks/use-toast'
-import { supabase } from '@/lib/supabaseClient'
+import { ApiError, apiDelete, apiPut } from '@/lib/apiClient'
 import { CURRENCIES, formatMoney, leadStatusMeta } from '@/lib/leadMeta'
 import { cn } from '@/lib/utils'
 import { LEAD_STATUSES } from '@/types'
@@ -52,7 +52,7 @@ function StatCard({ label, value }: { label: string; value: string }) {
 }
 
 export function LeadsPage() {
-  const { rows, loading, refetch } = useAdminTable<Lead>('contact_submissions')
+  const { rows, loading, refetch } = useAdminTable<Lead>('/leads')
   const { toast } = useToast()
   const navigate = useNavigate()
   const [filter, setFilter] = React.useState<LeadStatus | 'all'>('all')
@@ -80,37 +80,28 @@ export function LeadsPage() {
   }
 
   const save = async (lead: Lead) => {
-    if (!supabase || !draft) return
+    if (!draft) return
     setSaving(true)
     try {
-      const { error } = await supabase
-        .from('contact_submissions')
-        .update({
-          status: draft.status,
-          phone: draft.phone || null,
-          company: draft.company || null,
-          project_name: draft.project_name || null,
-          project_type: draft.project_type || null,
-          progress: Math.max(0, Math.min(100, Number(draft.progress) || 0)),
-          project_cost: draft.project_cost === '' ? null : Number(draft.project_cost),
-          currency: draft.currency,
-          next_follow_up: draft.next_follow_up || null,
-          notes: draft.notes || null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', lead.id)
-
-      if (error) {
-        toast({ variant: 'destructive', title: 'Could not save', description: error.message })
-        return
-      }
+      await apiPut(`/leads/${lead.id}`, {
+        status: draft.status,
+        phone: draft.phone || null,
+        company: draft.company || null,
+        project_name: draft.project_name || null,
+        project_type: draft.project_type || null,
+        progress: Math.max(0, Math.min(100, Number(draft.progress) || 0)),
+        project_cost: draft.project_cost === '' ? null : Number(draft.project_cost),
+        currency: draft.currency,
+        next_follow_up: draft.next_follow_up || null,
+        notes: draft.notes || null,
+      })
       toast({ title: 'Lead updated' })
       refetch()
     } catch (err) {
       toast({
         variant: 'destructive',
         title: 'Could not save',
-        description: err instanceof Error ? err.message : 'Could not reach the server.',
+        description: err instanceof ApiError ? err.message : 'Could not reach the server.',
       })
     } finally {
       setSaving(false)
@@ -118,19 +109,15 @@ export function LeadsPage() {
   }
 
   const remove = async (id: string) => {
-    if (!supabase || !window.confirm('Delete this lead permanently?')) return
+    if (!window.confirm('Delete this lead permanently?')) return
     try {
-      const { error } = await supabase.from('contact_submissions').delete().eq('id', id)
-      if (error) {
-        toast({ variant: 'destructive', title: 'Could not delete', description: error.message })
-        return
-      }
+      await apiDelete(`/leads/${id}`)
       refetch()
     } catch (err) {
       toast({
         variant: 'destructive',
         title: 'Could not delete',
-        description: err instanceof Error ? err.message : 'Could not reach the server.',
+        description: err instanceof ApiError ? err.message : 'Could not reach the server.',
       })
     }
   }

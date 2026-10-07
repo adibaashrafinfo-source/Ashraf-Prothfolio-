@@ -1,0 +1,11 @@
+# Uploaded files are served as static assets only — never executed, even if
+# a future upload path ever let a disallowed extension through.
+<FilesMatch "\.(php|phtml|php\d|phar|cgi|pl)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>

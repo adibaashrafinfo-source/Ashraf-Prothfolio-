@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-import { supabase } from '@/lib/supabaseClient'
+import { apiGet } from '@/lib/apiClient'
 import { defaultSiteSettings } from '@/data/site'
 import type { SiteSettings } from '@/types'
 
@@ -13,24 +13,11 @@ export function useSiteSettings() {
     let cancelled = false
 
     async function load() {
-      if (!supabase) {
-        setLoading(false)
-        return
-      }
-
       try {
-        const { data, error } = await supabase
-          .from('site_settings')
-          .select('*')
-          .eq('id', 'default')
-          .maybeSingle()
-
-        if (cancelled) return
-        if (!error && data) {
-          setSettings({ ...defaultSiteSettings, ...data })
-        }
+        const data = await apiGet<SiteSettings>('/site-settings')
+        if (!cancelled) setSettings({ ...defaultSiteSettings, ...data })
       } catch {
-        // Network/connection failure — keep the default settings.
+        // API unreachable/not configured — keep the default settings.
       } finally {
         if (!cancelled) setLoading(false)
       }

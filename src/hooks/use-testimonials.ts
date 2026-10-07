@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-import { supabase } from '@/lib/supabaseClient'
+import { apiGet } from '@/lib/apiClient'
 import { fallbackTestimonials } from '@/data/testimonials'
 import type { Testimonial } from '@/types'
 
@@ -12,23 +12,11 @@ export function useTestimonials() {
     let cancelled = false
 
     async function load() {
-      if (!supabase) {
-        setLoading(false)
-        return
-      }
-
       try {
-        const { data, error } = await supabase
-          .from('testimonials')
-          .select('*')
-          .order('created_at', { ascending: false })
-
-        if (cancelled) return
-        if (!error && data && data.length > 0) {
-          setTestimonials(data as Testimonial[])
-        }
+        const data = await apiGet<Testimonial[]>('/testimonials')
+        if (!cancelled && data.length > 0) setTestimonials(data)
       } catch {
-        // Network/connection failure — keep the fallback testimonials.
+        // API unreachable/not configured — keep the fallback testimonials.
       } finally {
         if (!cancelled) setLoading(false)
       }

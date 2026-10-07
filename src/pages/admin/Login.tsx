@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuth } from '@/hooks/use-auth'
-import { supabase } from '@/lib/supabaseClient'
+import { isApiConfigured } from '@/lib/apiClient'
 
 export function Login() {
   const { isAuthenticated, signIn } = useAuth()
@@ -44,10 +44,9 @@ export function Login() {
           Manage your site content, portfolio, and messages.
         </p>
 
-        {!supabase && (
+        {!isApiConfigured() && (
           <p className="border-destructive/30 bg-destructive/10 text-destructive mt-4 rounded-lg border p-3 text-xs">
-            Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to use the
-            admin panel.
+            The API is not configured. Set VITE_API_BASE_URL to use the admin panel.
           </p>
         )}
 
@@ -77,7 +76,12 @@ export function Login() {
 
           {error && <p className="text-destructive text-sm">{error}</p>}
 
-          <Button type="submit" size="lg" disabled={submitting || !supabase} className="mt-2 gap-2">
+          <Button
+            type="submit"
+            size="lg"
+            disabled={submitting || !isApiConfigured()}
+            className="mt-2 gap-2"
+          >
             {submitting && <Loader2 className="size-4 animate-spin" />}
             {submitting ? 'Signing in...' : 'Sign in'}
           </Button>

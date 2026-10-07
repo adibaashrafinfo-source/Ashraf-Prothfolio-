@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ImageUploadField } from '@/components/admin/ImageUploadField'
 import { useSiteSettings } from '@/hooks/use-site-settings'
 import { useToast } from '@/hooks/use-toast'
-import { supabase } from '@/lib/supabaseClient'
+import { ApiError, apiPut } from '@/lib/apiClient'
 import type { SiteSettings } from '@/types'
 
 type FormState = Omit<SiteSettings, 'id' | 'updated_at'>
@@ -34,20 +34,15 @@ export function SettingsPage() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!supabase) return
     setSaving(true)
     try {
-      const { error } = await supabase.from('site_settings').upsert({ id: 'default', ...form })
-      if (error) {
-        toast({ variant: 'destructive', title: 'Could not save', description: error.message })
-        return
-      }
+      await apiPut('/site-settings', form)
       toast({ title: 'Saved', description: 'Site settings updated.' })
     } catch (err) {
       toast({
         variant: 'destructive',
         title: 'Could not save',
-        description: err instanceof Error ? err.message : 'Could not reach the server.',
+        description: err instanceof ApiError ? err.message : 'Could not reach the server.',
       })
     } finally {
       setSaving(false)

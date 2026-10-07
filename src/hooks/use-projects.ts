@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-import { supabase } from '@/lib/supabaseClient'
+import { apiGet } from '@/lib/apiClient'
 import { fallbackProjects } from '@/data/projects'
 import type { Project } from '@/types'
 
@@ -12,23 +12,11 @@ export function useProjects() {
     let cancelled = false
 
     async function load() {
-      if (!supabase) {
-        setLoading(false)
-        return
-      }
-
       try {
-        const { data, error } = await supabase
-          .from('projects')
-          .select('*')
-          .order('created_at', { ascending: false })
-
-        if (cancelled) return
-        if (!error && data && data.length > 0) {
-          setProjects(data as Project[])
-        }
+        const data = await apiGet<Project[]>('/projects')
+        if (!cancelled && data.length > 0) setProjects(data)
       } catch {
-        // Network/connection failure — keep the fallback projects.
+        // API unreachable/not configured — keep the fallback projects.
       } finally {
         if (!cancelled) setLoading(false)
       }

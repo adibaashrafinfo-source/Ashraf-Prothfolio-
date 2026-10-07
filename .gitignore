@@ -15,6 +15,11 @@ dist-ssr
 .env.*
 !.env.example
 
+# PHP backend — real DB credentials and JWT secret live here on the server only.
+server-php/config.php
+server-php/uploads/*
+!server-php/uploads/.htaccess
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

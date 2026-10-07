@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-import { supabase } from '@/lib/supabaseClient'
+import { apiGet } from '@/lib/apiClient'
 import { defaultSocialLinks } from '@/data/site'
 import type { SocialLink } from '@/types'
 
@@ -16,23 +16,11 @@ export function useSocialLinks() {
     let cancelled = false
 
     async function load() {
-      if (!supabase) {
-        setLoading(false)
-        return
-      }
-
       try {
-        const { data, error } = await supabase
-          .from('social_links')
-          .select('*')
-          .order('sort_order', { ascending: true })
-
-        if (cancelled) return
-        if (!error && data && data.length > 0) {
-          setLinks(data as SocialLink[])
-        }
+        const data = await apiGet<SocialLink[]>('/social-links')
+        if (!cancelled && data.length > 0) setLinks(data)
       } catch {
-        // Network/connection failure — keep the default links.
+        // API unreachable/not configured — keep the default links.
       } finally {
         if (!cancelled) setLoading(false)
       }

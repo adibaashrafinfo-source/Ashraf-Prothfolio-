@@ -10,7 +10,7 @@ import { ImageUploadField } from '@/components/admin/ImageUploadField'
 import { useAdminTable } from '@/hooks/use-admin-table'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
-import { supabase } from '@/lib/supabaseClient'
+import { ApiError, apiDelete, apiPost, apiPut } from '@/lib/apiClient'
 import type { Testimonial } from '@/types'
 
 type FormState = {
@@ -30,7 +30,7 @@ const emptyForm: FormState = {
 }
 
 export function TestimonialsAdmin() {
-  const { rows, loading, refetch } = useAdminTable<Testimonial>('testimonials')
+  const { rows, loading, refetch } = useAdminTable<Testimonial>('/testimonials')
   const { toast } = useToast()
   const [editingId, setEditingId] = React.useState<string | null>(null)
   const [form, setForm] = React.useState<FormState>(emptyForm)
@@ -63,7 +63,6 @@ export function TestimonialsAdmin() {
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!supabase) return
     setSaving(true)
 
     const payload = {
@@ -75,13 +74,10 @@ export function TestimonialsAdmin() {
     }
 
     try {
-      const { error } = editingId
-        ? await supabase.from('testimonials').update(payload).eq('id', editingId)
-        : await supabase.from('testimonials').insert(payload)
-
-      if (error) {
-        toast({ variant: 'destructive', title: 'Could not save', description: error.message })
-        return
+      if (editingId) {
+        await apiPut(`/testimonials/${editingId}`, payload)
+      } else {
+        await apiPost('/testimonials', payload)
       }
       toast({ title: editingId ? 'Testimonial updated' : 'Testimonial added' })
       cancel()
@@ -90,7 +86,7 @@ export function TestimonialsAdmin() {
       toast({
         variant: 'destructive',
         title: 'Could not save',
-        description: err instanceof Error ? err.message : 'Could not reach the server.',
+        description: err instanceof ApiError ? err.message : 'Could not reach the server.',
       })
     } finally {
       setSaving(false)
@@ -98,19 +94,15 @@ export function TestimonialsAdmin() {
   }
 
   const remove = async (id: string) => {
-    if (!supabase || !window.confirm('Delete this testimonial?')) return
+    if (!window.confirm('Delete this testimonial?')) return
     try {
-      const { error } = await supabase.from('testimonials').delete().eq('id', id)
-      if (error) {
-        toast({ variant: 'destructive', title: 'Could not delete', description: error.message })
-        return
-      }
+      await apiDelete(`/testimonials/${id}`)
       refetch()
     } catch (err) {
       toast({
         variant: 'destructive',
         title: 'Could not delete',
-        description: err instanceof Error ? err.message : 'Could not reach the server.',
+        description: err instanceof ApiError ? err.message : 'Could not reach the server.',
       })
     }
   }

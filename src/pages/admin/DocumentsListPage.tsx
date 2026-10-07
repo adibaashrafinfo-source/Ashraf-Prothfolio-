@@ -4,7 +4,7 @@ import { FileText, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAdminTable } from '@/hooks/use-admin-table'
 import { useToast } from '@/hooks/use-toast'
-import { supabase } from '@/lib/supabaseClient'
+import { ApiError, apiDelete } from '@/lib/apiClient'
 import { docTotals, isOverdue } from '@/lib/documents'
 import { formatMoney } from '@/lib/leadMeta'
 import { cn } from '@/lib/utils'
@@ -23,7 +23,7 @@ const statusClass: Record<string, string> = {
 }
 
 export function DocumentsListPage({ kind }: { kind: DocumentKind }) {
-  const { rows, loading, refetch } = useAdminTable<BusinessDocument>('business_documents')
+  const { rows, loading, refetch } = useAdminTable<BusinessDocument>('/documents')
   const { toast } = useToast()
   const navigate = useNavigate()
 
@@ -31,13 +31,17 @@ export function DocumentsListPage({ kind }: { kind: DocumentKind }) {
   const label = kind === 'quotation' ? 'Quotations' : 'Invoices'
 
   const remove = async (id: string) => {
-    if (!supabase || !window.confirm(`Delete this ${kind}?`)) return
-    const { error } = await supabase.from('business_documents').delete().eq('id', id)
-    if (error) {
-      toast({ variant: 'destructive', title: 'Could not delete', description: error.message })
-      return
+    if (!window.confirm(`Delete this ${kind}?`)) return
+    try {
+      await apiDelete(`/documents/${id}`)
+      refetch()
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: 'Could not delete',
+        description: err instanceof ApiError ? err.message : 'Could not reach the server.',
+      })
     }
-    refetch()
   }
 
   const totalValue = docs.reduce((sum, d) => sum + docTotals(d).total, 0)

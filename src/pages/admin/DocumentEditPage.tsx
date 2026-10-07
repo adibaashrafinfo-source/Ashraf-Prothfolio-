@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
 import { DocumentPreview } from '@/components/documents/DocumentPreview'
 import { useToast } from '@/hooks/use-toast'
-import { supabase } from '@/lib/supabaseClient'
+import { ApiError, apiGet, apiPost, apiPut } from '@/lib/apiClient'
 import {
   addDays,
   composeProfessionalCopy,
@@ -84,36 +84,28 @@ export function DocumentEditPage({ newKind }: { newKind?: DocumentKind }) {
     let cancelled = false
 
     async function load() {
-      if (!supabase) {
-        setLoading(false)
-        return
-      }
-
       if (id) {
-        const { data, error } = await supabase
-          .from('business_documents')
-          .select('*')
-          .eq('id', id)
-          .single()
-        if (cancelled) return
-        if (error || !data) {
-          toast({ variant: 'destructive', title: 'Could not load document' })
-        } else {
-          setDoc({ ...(data as BusinessDocument), items: (data.items ?? []) as never })
+        try {
+          const data = await apiGet<BusinessDocument>(`/documents/${id}`)
+          if (cancelled) return
+          setDoc({ ...data, items: data.items ?? [] })
+        } catch {
+          if (!cancelled) toast({ variant: 'destructive', title: 'Could not load document' })
+        } finally {
+          if (!cancelled) setLoading(false)
         }
-        setLoading(false)
         return
       }
 
       const leadId = params.get('lead')
       if (leadId) {
-        const { data } = await supabase
-          .from('contact_submissions')
-          .select('*')
-          .eq('id', leadId)
-          .single()
-        if (cancelled || !data) return
-        const lead = data as Lead
+        let lead: Lead
+        try {
+          lead = await apiGet<Lead>(`/leads/${leadId}`)
+        } catch {
+          return
+        }
+        if (cancelled) return
         setDoc((d) => ({
           ...d,
           lead_id: lead.id,
@@ -159,7 +151,6 @@ export function DocumentEditPage({ newKind }: { newKind?: DocumentKind }) {
   }
 
   const save = async () => {
-    if (!supabase) return
     if (!doc.client_name || !doc.project_title) {
       toast({
         variant: 'destructive',
@@ -194,32 +185,22 @@ export function DocumentEditPage({ newKind }: { newKind?: DocumentKind }) {
       paid_amount: doc.paid_amount,
       template: doc.template,
       status: doc.status,
-      updated_at: new Date().toISOString(),
     }
 
     try {
       if (doc.id) {
-        const { error } = await supabase
-          .from('business_documents')
-          .update(payload)
-          .eq('id', doc.id)
-        if (error) throw new Error(error.message)
+        await apiPut(`/documents/${doc.id}`, payload)
         toast({ title: 'Saved' })
       } else {
-        const { data, error } = await supabase
-          .from('business_documents')
-          .insert(payload)
-          .select()
-          .single()
-        if (error) throw new Error(error.message)
+        const created = await apiPost<BusinessDocument>('/documents', payload)
         toast({ title: 'Created' })
-        navigate(`/admin/documents/${(data as BusinessDocument).id}`, { replace: true })
+        navigate(`/admin/documents/${created.id}`, { replace: true })
       }
     } catch (err) {
       toast({
         variant: 'destructive',
         title: 'Could not save',
-        description: err instanceof Error ? err.message : 'Could not reach the server.',
+        description: err instanceof ApiError ? err.message : 'Could not reach the server.',
       })
     } finally {
       setSaving(false)
@@ -227,53 +208,48 @@ export function DocumentEditPage({ newKind }: { newKind?: DocumentKind }) {
   }
 
   const convertToInvoice = async () => {
-    if (!supabase || !doc.id) return
+    if (!doc.id) return
     setSaving(true)
     try {
-      const { data, error } = await supabase
-        .from('business_documents')
-        .insert({
+      const created = await apiPost<BusinessDocument>('/documents', {
+        kind: 'invoice',
+        doc_number: generateDocNumber('invoice'),
+        lead_id: doc.lead_id,
+        source_quotation_id: doc.id,
+        client_name: doc.client_name,
+        client_company: doc.client_company,
+        client_email: doc.client_email,
+        client_phone: doc.client_phone,
+        client_address: doc.client_address,
+        project_title: doc.project_title,
+        project_details: doc.project_details,
+        items: doc.items,
+        currency: doc.currency,
+        discount: doc.discount,
+        tax_percent: doc.tax_percent,
+        terms: composeProfessionalCopy({
           kind: 'invoice',
-          doc_number: generateDocNumber('invoice'),
-          lead_id: doc.lead_id,
-          source_quotation_id: doc.id,
-          client_name: doc.client_name,
-          client_company: doc.client_company,
-          client_email: doc.client_email,
-          client_phone: doc.client_phone,
-          client_address: doc.client_address,
-          project_title: doc.project_title,
-          project_details: doc.project_details,
+          clientName: doc.client_name,
+          projectTitle: doc.project_title,
+          rawDetails: '',
           items: doc.items,
+          validDays: VALID_DAYS,
           currency: doc.currency,
-          discount: doc.discount,
-          tax_percent: doc.tax_percent,
-          terms: composeProfessionalCopy({
-            kind: 'invoice',
-            clientName: doc.client_name,
-            projectTitle: doc.project_title,
-            rawDetails: '',
-            items: doc.items,
-            validDays: VALID_DAYS,
-            currency: doc.currency,
-          }).terms,
-          notes: doc.notes,
-          issue_date: today(),
-          due_date: addDays(7),
-          template: doc.template,
-          status: 'draft',
-        })
-        .select()
-        .single()
+        }).terms,
+        notes: doc.notes,
+        issue_date: today(),
+        due_date: addDays(7),
+        template: doc.template,
+        status: 'draft',
+      })
 
-      if (error) throw new Error(error.message)
       toast({ title: 'Invoice created from this quotation' })
-      navigate(`/admin/documents/${(data as BusinessDocument).id}`)
+      navigate(`/admin/documents/${created.id}`)
     } catch (err) {
       toast({
         variant: 'destructive',
         title: 'Could not create invoice',
-        description: err instanceof Error ? err.message : 'Could not reach the server.',
+        description: err instanceof ApiError ? err.message : 'Could not reach the server.',
       })
     } finally {
       setSaving(false)

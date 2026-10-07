@@ -24,12 +24,12 @@ import type {
 } from '@/types'
 
 export function Dashboard() {
-  const projects = useAdminTable<Project>('projects')
-  const testimonials = useAdminTable<Testimonial>('testimonials')
-  const social = useAdminTable<SocialLink>('social_links')
-  const leads = useAdminTable<Lead>('contact_submissions')
-  const clients = useAdminTable<ClientLogo>('client_logos', 'sort_order', true)
-  const documents = useAdminTable<BusinessDocument>('business_documents')
+  const projects = useAdminTable<Project>('/projects')
+  const testimonials = useAdminTable<Testimonial>('/testimonials')
+  const social = useAdminTable<SocialLink>('/social-links')
+  const leads = useAdminTable<Lead>('/leads')
+  const clients = useAdminTable<ClientLogo>('/client-logos')
+  const documents = useAdminTable<BusinessDocument>('/documents')
 
   const quotations = documents.rows.filter((d) => d.kind === 'quotation')
   const invoices = documents.rows.filter((d) => d.kind === 'invoice')

@@ -1,40 +1,25 @@
 import * as React from 'react'
 
-import { supabase } from '@/lib/supabaseClient'
+import { apiGet } from '@/lib/apiClient'
 
-export function useAdminTable<T extends { id: string }>(
-  table: string,
-  orderColumn = 'created_at',
-  ascending = false,
-) {
+/** Fetches a list from an admin API path, e.g. '/projects' or '/leads'. */
+export function useAdminTable<T>(path: string) {
   const [rows, setRows] = React.useState<T[]>([])
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
 
   const refetch = React.useCallback(async () => {
-    if (!supabase) {
-      setLoading(false)
-      return
-    }
     setLoading(true)
     try {
-      const { data, error } = await supabase
-        .from(table)
-        .select('*')
-        .order(orderColumn, { ascending })
-
-      if (error) {
-        setError(error.message)
-      } else {
-        setRows((data ?? []) as T[])
-        setError(null)
-      }
+      const data = await apiGet<T[]>(path)
+      setRows(data)
+      setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load data.')
     } finally {
       setLoading(false)
     }
-  }, [table, orderColumn, ascending])
+  }, [path])
 
   React.useEffect(() => {
     refetch()

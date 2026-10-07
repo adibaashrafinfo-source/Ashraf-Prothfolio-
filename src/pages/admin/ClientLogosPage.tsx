@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { ImageUploadField } from '@/components/admin/ImageUploadField'
 import { useAdminTable } from '@/hooks/use-admin-table'
 import { useToast } from '@/hooks/use-toast'
-import { supabase } from '@/lib/supabaseClient'
+import { ApiError, apiDelete, apiPost, apiPut } from '@/lib/apiClient'
 import type { ClientLogo } from '@/types'
 
 type FormState = {
@@ -21,7 +21,7 @@ type FormState = {
 const emptyForm: FormState = { name: '', logo_url: '', website_url: '', sort_order: '0' }
 
 export function ClientLogosPage() {
-  const { rows, loading, refetch } = useAdminTable<ClientLogo>('client_logos', 'sort_order', true)
+  const { rows, loading, refetch } = useAdminTable<ClientLogo>('/client-logos')
   const { toast } = useToast()
   const [editingId, setEditingId] = React.useState<string | null>(null)
   const [form, setForm] = React.useState<FormState>(emptyForm)
@@ -47,7 +47,6 @@ export function ClientLogosPage() {
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!supabase) return
     if (!form.logo_url) {
       toast({
         variant: 'destructive',
@@ -66,13 +65,10 @@ export function ClientLogosPage() {
     }
 
     try {
-      const { error } = editingId
-        ? await supabase.from('client_logos').update(payload).eq('id', editingId)
-        : await supabase.from('client_logos').insert(payload)
-
-      if (error) {
-        toast({ variant: 'destructive', title: 'Could not save', description: error.message })
-        return
+      if (editingId) {
+        await apiPut(`/client-logos/${editingId}`, payload)
+      } else {
+        await apiPost('/client-logos', payload)
       }
       toast({ title: editingId ? 'Logo updated' : 'Logo added' })
       cancel()
@@ -81,7 +77,7 @@ export function ClientLogosPage() {
       toast({
         variant: 'destructive',
         title: 'Could not save',
-        description: err instanceof Error ? err.message : 'Could not reach the server.',
+        description: err instanceof ApiError ? err.message : 'Could not reach the server.',
       })
     } finally {
       setSaving(false)
@@ -89,19 +85,15 @@ export function ClientLogosPage() {
   }
 
   const remove = async (id: string) => {
-    if (!supabase || !window.confirm('Delete this client logo?')) return
+    if (!window.confirm('Delete this client logo?')) return
     try {
-      const { error } = await supabase.from('client_logos').delete().eq('id', id)
-      if (error) {
-        toast({ variant: 'destructive', title: 'Could not delete', description: error.message })
-        return
-      }
+      await apiDelete(`/client-logos/${id}`)
       refetch()
     } catch (err) {
       toast({
         variant: 'destructive',
         title: 'Could not delete',
-        description: err instanceof Error ? err.message : 'Could not reach the server.',
+        description: err instanceof ApiError ? err.message : 'Could not reach the server.',
       })
     }
   }

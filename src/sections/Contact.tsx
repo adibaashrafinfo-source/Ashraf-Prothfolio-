@@ -14,7 +14,7 @@ import { useSiteSettings } from '@/hooks/use-site-settings'
 import { useSocialLinks } from '@/hooks/use-social-links'
 import { contactSchema, type ContactFormValues } from '@/lib/contactSchema'
 import { socialIconMap } from '@/lib/socialIcons'
-import { supabase } from '@/lib/supabaseClient'
+import { ApiError, apiPost, isApiConfigured } from '@/lib/apiClient'
 
 export function Contact() {
   const { settings: site } = useSiteSettings()
@@ -47,7 +47,7 @@ export function Contact() {
         setFallback(values)
       }
 
-      if (!supabase) {
+      if (!isApiConfigured()) {
         failed('The contact form is not connected yet. Please email or WhatsApp me instead.')
         return
       }
@@ -55,13 +55,9 @@ export function Contact() {
       try {
         // Without this try/catch a network/CORS failure rejects and the form
         // silently does nothing, so the sender never learns it failed.
-        const { error } = await supabase.from('contact_submissions').insert(values)
-        if (error) {
-          failed(error.message)
-          return
-        }
+        await apiPost('/contact', values)
       } catch (err) {
-        failed(err instanceof Error ? err.message : 'Could not reach the server.')
+        failed(err instanceof ApiError ? err.message : 'Could not reach the server.')
         return
       }
 

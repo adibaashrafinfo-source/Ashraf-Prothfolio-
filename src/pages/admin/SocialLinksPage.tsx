@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { useAdminTable } from '@/hooks/use-admin-table'
 import { useToast } from '@/hooks/use-toast'
 import { socialIconMap, socialIconOptions } from '@/lib/socialIcons'
-import { supabase } from '@/lib/supabaseClient'
+import { ApiError, apiDelete, apiPost, apiPut } from '@/lib/apiClient'
 import type { SocialIconKey, SocialLink } from '@/types'
 
 type FormState = { name: string; icon: SocialIconKey; href: string; sort_order: number }
@@ -16,7 +16,7 @@ type FormState = { name: string; icon: SocialIconKey; href: string; sort_order: 
 const emptyForm: FormState = { name: '', icon: 'globe', href: '', sort_order: 0 }
 
 export function SocialLinksPage() {
-  const { rows, loading, refetch } = useAdminTable<SocialLink>('social_links', 'sort_order', true)
+  const { rows, loading, refetch } = useAdminTable<SocialLink>('/social-links')
   const { toast } = useToast()
   const [editingId, setEditingId] = React.useState<string | null>(null)
   const [form, setForm] = React.useState<FormState>(emptyForm)
@@ -43,16 +43,12 @@ export function SocialLinksPage() {
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!supabase) return
     setSaving(true)
     try {
-      const { error } = editingId
-        ? await supabase.from('social_links').update(form).eq('id', editingId)
-        : await supabase.from('social_links').insert(form)
-
-      if (error) {
-        toast({ variant: 'destructive', title: 'Could not save', description: error.message })
-        return
+      if (editingId) {
+        await apiPut(`/social-links/${editingId}`, form)
+      } else {
+        await apiPost('/social-links', form)
       }
       toast({ title: editingId ? 'Link updated' : 'Link added' })
       cancel()
@@ -61,7 +57,7 @@ export function SocialLinksPage() {
       toast({
         variant: 'destructive',
         title: 'Could not save',
-        description: err instanceof Error ? err.message : 'Could not reach the server.',
+        description: err instanceof ApiError ? err.message : 'Could not reach the server.',
       })
     } finally {
       setSaving(false)
@@ -69,19 +65,15 @@ export function SocialLinksPage() {
   }
 
   const remove = async (id: string) => {
-    if (!supabase || !window.confirm('Delete this social link?')) return
+    if (!window.confirm('Delete this social link?')) return
     try {
-      const { error } = await supabase.from('social_links').delete().eq('id', id)
-      if (error) {
-        toast({ variant: 'destructive', title: 'Could not delete', description: error.message })
-        return
-      }
+      await apiDelete(`/social-links/${id}`)
       refetch()
     } catch (err) {
       toast({
         variant: 'destructive',
         title: 'Could not delete',
-        description: err instanceof Error ? err.message : 'Could not reach the server.',
+        description: err instanceof ApiError ? err.message : 'Could not reach the server.',
       })
     }
   }

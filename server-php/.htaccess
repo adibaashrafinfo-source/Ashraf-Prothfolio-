@@ -1,0 +1,18 @@
+# Routes every request in this folder through index.php, except requests for
+# files that actually exist on disk (so /uploads/... is still served as a
+# plain static file).
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php?_route=$1 [QSA,L]
+
+# Never serve config.php or schema.sql directly, even if someone guesses the URL.
+<FilesMatch "^(config\.php|schema\.sql|create_admin\.php)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>

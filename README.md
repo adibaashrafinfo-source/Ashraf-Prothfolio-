@@ -2,7 +2,7 @@
 
 A fast, fully responsive personal portfolio for **Ashraful Islam (Arif)**, Founder & CEO of
 **Abrar IT** — built with React, TypeScript, Tailwind CSS, shadcn-style components, Framer
-Motion, and Supabase.
+Motion, and a small PHP + MySQL backend you run on your own hosting.
 
 ## Tech stack
 
@@ -11,9 +11,10 @@ Motion, and Supabase.
 - **Styling:** Tailwind CSS v4 + shadcn/ui-style components
 - **Animation:** Framer Motion
 - **Icons:** lucide-react
-- **Backend / DB:** Supabase (`@supabase/supabase-js`)
+- **Backend / DB:** a self-hosted PHP REST API + MySQL (see [`server-php/`](./server-php)) —
+  no third-party account, runs on any cPanel/shared hosting with PHP and MySQL
 - **Forms:** React Hook Form + Zod
-- **Hosting:** Vercel
+- **Hosting:** Vercel (frontend) + your own hosting (API + database)
 
 ## Project structure
 
@@ -26,13 +27,14 @@ src/
   pages/         # Home (the one-page layout), ProjectDetail (per-project case study page)
   sections/      # Hero, About, Skills, Services, Portfolio, Stats, Testimonials, Contact
   hooks/         # use-dark-mode, use-counter, use-projects, use-testimonials,
-                 # use-section-nav, use-toast
-  lib/           # supabaseClient.ts, utils.ts, contactSchema.ts
-  types/         # Project, Testimonial, ContactSubmission types
+                 # use-section-nav, use-toast, use-auth
+  lib/           # apiClient.ts (the API client), utils.ts, contactSchema.ts
+  types/         # Project, Testimonial, Lead, BusinessDocument, etc.
   data/          # site.ts (all editable content), skills.ts, services.ts,
                  # projects.ts / testimonials.ts (static fallback data)
 public/          # favicon, profile.jpg, profile-about.jpg, cv.pdf, og-image.png,
                  # robots.txt, sitemap.xml
+server-php/      # the PHP + MySQL API that powers the admin panel (see below)
 vercel.json      # SPA rewrite so /portfolio/:id resolves correctly on refresh/direct load
 ```
 
@@ -40,32 +42,35 @@ vercel.json      # SPA rewrite so /portfolio/:id resolves correctly on refresh/d
 
 The site is a single page (`/`) with anchor-scroll navigation, plus one route per portfolio
 project: clicking a project card in the Portfolio section opens `/portfolio/:id`, a full case
-study page reusing the same project data (Supabase or the static fallback). Nav links and the
-logo work from any page — if you're not on `/`, clicking a section link navigates back to `/`
-and scrolls to that section.
+study page reusing the same project data (from the API, or the static fallback). Nav links and
+the logo work from any page — if you're not on `/`, clicking a section link navigates back to
+`/` and scrolls to that section.
 
 ## Getting started
 
 ```bash
 npm install
-cp .env.example .env   # then fill in your Supabase credentials
+cp .env.example .env   # then fill in VITE_API_BASE_URL once your backend is deployed
 npm run dev
 ```
 
-The site runs at `http://localhost:5173`.
+The site runs at `http://localhost:5173`. The backend (`server-php/`) is a separate PHP app that
+lives on your own hosting — see **[Backend setup](./server-php/DEPLOY.md)** for the full,
+step-by-step cPanel guide (create the database, import the schema, upload the API, create your
+admin login).
 
 ## Environment variables
 
 Create a `.env` file (never commit it) with:
 
 ```
-VITE_SUPABASE_URL=https://your-project-ref.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-public-key
+VITE_API_BASE_URL=https://your-domain.com/api
 ```
 
-If these are not set, the app still runs — the Portfolio and Testimonials sections fall back
-to the static data in `src/data/projects.ts` and `src/data/testimonials.ts`, and the contact
-form will show an error toast instead of submitting.
+Point it at wherever you deployed `server-php/` (see the deploy guide). If this is not set, the
+app still runs — the Portfolio and Testimonials sections fall back to the static data in
+`src/data/projects.ts` and `src/data/testimonials.ts`, and the contact form will show an error
+toast with an email/WhatsApp fallback instead of submitting.
 
 ## Updating content
 
@@ -76,22 +81,20 @@ There are two ways to edit content, and both work together:
    (with image upload), testimonials, and incoming contact messages. See
    [Admin panel](#admin-panel) below for setup.
 2. **Editing code directly** — `src/data/site.ts` holds the *default/fallback* copy used until
-   Supabase has real data (or if Supabase isn't configured at all). Skills and services
+   the API has real data (or if the API isn't configured at all). Skills and services
    (`src/data/skills.ts`, `src/data/services.ts`) are not part of the admin panel and are only
    editable in code.
 
-### Supabase schema
+### Backend (PHP + MySQL)
 
-Run [`supabase/schema.sql`](./supabase/schema.sql) once in your Supabase project's SQL Editor
-(Dashboard → SQL Editor → New query → paste the file → Run). It creates every table the site and
-admin panel need (`projects`, `testimonials`, `contact_submissions`, `site_settings`,
-`social_links`, `client_logos`, `business_documents`), a public `media` storage bucket for
-uploaded images, and Row Level Security policies so visitors can only read content and submit the
-contact form, while a signed-in admin can manage everything. It's safe to re-run.
+The API is a plain PHP app in [`server-php/`](./server-php) — no framework, no Composer
+dependencies, built to run on ordinary cPanel/shared hosting. It talks to a MySQL database using
+[`server-php/schema.sql`](./server-php/schema.sql), which creates every table the site and admin
+panel need (`projects`, `testimonials`, `contact_submissions`, `site_settings`, `social_links`,
+`client_logos`, `business_documents`, `admin_users`). It's safe to re-run.
 
-**Already have an older version of the schema?** Re-run the same file. It adds the newer pieces
-(the CRM columns on `contact_submissions`, the `client_logos` table, and the
-`business_documents` table behind quotations and invoices) without touching existing rows.
+Full setup (create the database, import the schema, upload the files, create your admin login,
+point Vercel at it) is in **[`server-php/DEPLOY.md`](./server-php/DEPLOY.md)**.
 
 ## Admin panel
 
@@ -123,15 +126,19 @@ code:
 
 ### Setting up your admin login
 
-1. Run `supabase/schema.sql` (see above) if you haven't already.
-2. In the Supabase dashboard, go to **Authentication → Users → Add user**, and create yourself
-   an email + password. (There is no public sign-up page — accounts are created by you in the
-   dashboard on purpose, so a stranger can't register their own admin access.)
+1. Deploy `server-php/` and import `schema.sql` (see
+   [`server-php/DEPLOY.md`](./server-php/DEPLOY.md)) if you haven't already.
+2. From your hosting's Terminal (or SSH), inside the `server-php` folder, run:
+   ```bash
+   php create_admin.php you@example.com "a-strong-password"
+   ```
+   (There is no public sign-up page — accounts are created this way on purpose, so a stranger
+   can't register their own admin access.)
 3. Visit `/admin/login` on your deployed site (or `http://localhost:5173/admin/login` locally)
    and sign in with that email and password.
 
-Anyone signed in can manage all content per the RLS policies in the schema — only create
-accounts for people you trust with full edit access.
+Anyone signed in can manage all content — only create accounts for people you trust with full
+edit access.
 
 ## Rebranding
 
@@ -150,19 +157,23 @@ npm run lint       # run oxlint
 
 ## Deploying to Vercel
 
+Deploy the backend first (see [`server-php/DEPLOY.md`](./server-php/DEPLOY.md)) — you need its
+URL for step 4.
+
 1. Push this repository to GitHub (see commands below).
 2. Go to [vercel.com/new](https://vercel.com/new) and import the GitHub repository.
 3. Vercel auto-detects the Vite framework preset — leave the build command
    (`npm run build` / `vite build`) and output directory (`dist`) as default.
-4. Before the first deploy, add your environment variables:
+4. Before the first deploy, add your environment variable:
    **Project Settings → Environment Variables** → add
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
+   - `VITE_API_BASE_URL` = `https://your-domain.com/api` (wherever you deployed `server-php/`)
 
-   Set them for all environments (Production, Preview, Development), then redeploy if you added
-   them after the first deploy.
+   Set it for all environments (Production, Preview, Development), then redeploy if you added it
+   after the first deploy.
 5. Click **Deploy**. Vercel will give you a live URL, and every push to your default branch
    will auto-deploy from then on.
+6. Back in `server-php/config.php` on your hosting, add that Vercel URL (and any preview domain
+   you use) to `allowed_origins` so the API accepts requests from it.
 
 ## Pushing to a new GitHub repository
 
