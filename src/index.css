@@ -1,6 +1,20 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 /*
@@ -125,9 +139,6 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
-  }
-  html {
-    scroll-behavior: smooth;
   }
   body {
     @apply bg-background text-foreground font-sans antialiased;

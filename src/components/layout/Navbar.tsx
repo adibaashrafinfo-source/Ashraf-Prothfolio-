@@ -14,6 +14,7 @@ export function Navbar() {
   const [scrolled, setScrolled] = React.useState(false)
   const [open, setOpen] = React.useState(false)
   const [active, setActive] = React.useState('')
+  const [hovered, setHovered] = React.useState<string | null>(null)
   const { theme, toggle } = useDarkMode()
   const { goToSection } = useSectionNav()
   const { settings: site } = useSiteSettings()
@@ -68,20 +69,37 @@ export function Navbar() {
           <Logo text={site.logo_text} imageUrl={site.logo_image_url} />
         </a>
 
-        <ul className="hidden items-center gap-1 md:flex">
+        <ul
+          className="hidden items-center gap-1 md:flex"
+          onMouseLeave={() => setHovered(null)}
+        >
           {navLinks.map((link) => (
-            <li key={link.href}>
+            <li key={link.href} className="relative">
               <button
+                onMouseEnter={() => setHovered(link.href)}
+                onFocus={() => setHovered(link.href)}
                 onClick={() => handleNavClick(link.href)}
                 className={cn(
-                  'rounded-full px-4 py-2 text-sm font-medium transition-colors',
+                  'relative z-10 rounded-full px-4 py-2 text-sm font-medium transition-colors duration-200',
                   active === link.href
-                    ? 'bg-primary/10 text-primary'
+                    ? 'text-primary'
                     : 'text-muted-foreground hover:text-foreground',
                 )}
               >
                 {link.label}
               </button>
+              {(hovered === link.href || (!hovered && active === link.href)) && (
+                <motion.span
+                  layoutId="nav-hover-pill"
+                  className={cn(
+                    'absolute inset-0 rounded-full',
+                    active === link.href && hovered !== link.href
+                      ? 'bg-primary/10'
+                      : 'bg-secondary',
+                  )}
+                  transition={{ type: 'spring', stiffness: 420, damping: 32, mass: 0.6 }}
+                />
+              )}
             </li>
           ))}
         </ul>
