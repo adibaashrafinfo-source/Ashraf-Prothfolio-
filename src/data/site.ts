@@ -19,7 +19,7 @@ export const defaultSiteSettings: Omit<SiteSettings, 'id' | 'updated_at'> = {
   resume_url: '/cv.pdf',
   map_embed_src:
     'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d234550.7!2d90.35!3d23.78!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3755b8aac6bc0e51%3A0x8fdb2782f04ff859!2sDhaka!5e0!3m2!1sen!2sbd',
-  logo_text: 'Arif',
+  logo_text: 'Md. Ashraful Islam Arif',
   logo_image_url: null,
 }
 

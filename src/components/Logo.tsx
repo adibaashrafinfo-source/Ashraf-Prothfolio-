@@ -10,7 +10,7 @@ export function Logo({ text, imageUrl, className }: LogoProps) {
   }
 
   return (
-    <span className={className ?? 'font-display text-lg font-bold'}>
+    <span className={className ?? 'font-display text-sm font-bold whitespace-nowrap sm:text-base lg:text-lg'}>
       {text}
       <span className="text-primary">.</span>
     </span>

@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS site_settings (
   phone VARCHAR(50) NOT NULL DEFAULT '',
   resume_url VARCHAR(500) NOT NULL DEFAULT '/cv.pdf',
   map_embed_src TEXT NOT NULL,
-  logo_text VARCHAR(100) NOT NULL DEFAULT 'Arif',
+  logo_text VARCHAR(100) NOT NULL DEFAULT 'Md. Ashraful Islam Arif',
   logo_image_url VARCHAR(500) NULL,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
