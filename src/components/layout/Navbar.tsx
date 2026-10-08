@@ -4,6 +4,7 @@ import { Menu, Moon, Sun, X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Logo } from '@/components/Logo'
+import { Magnetic } from '@/components/Magnetic'
 import { cn } from '@/lib/utils'
 import { useDarkMode } from '@/hooks/use-dark-mode'
 import { useSectionNav } from '@/hooks/use-section-nav'
@@ -59,15 +60,17 @@ export function Navbar() {
       )}
     >
       <nav className="container-px mx-auto flex h-18 max-w-6xl items-center justify-between">
-        <a
+        <motion.a
           href="#top"
           onClick={(e) => {
             e.preventDefault()
             handleNavClick('#top')
           }}
+          animate={{ scale: scrolled ? 0.92 : 1 }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
         >
           <Logo text={site.logo_text} imageUrl={site.logo_image_url} />
-        </a>
+        </motion.a>
 
         <ul
           className="hidden items-center gap-1 md:flex"
@@ -114,9 +117,9 @@ export function Navbar() {
           >
             {theme === 'dark' ? <Sun /> : <Moon />}
           </Button>
-          <Button className="hidden md:inline-flex" onClick={() => handleNavClick('#contact')}>
-            Hire Me
-          </Button>
+          <Magnetic className="hidden md:inline-flex" strength={0.3}>
+            <Button onClick={() => handleNavClick('#contact')}>Hire Me</Button>
+          </Magnetic>
           <Button
             variant="ghost"
             size="icon"
