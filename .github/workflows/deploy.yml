@@ -27,7 +27,7 @@ jobs:
         env:
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
 
-      - name: Deploy to cPanel via SFTP
+      - name: Deploy frontend to cPanel via SFTP
         uses: wlixcc/SFTP-Deploy-Action@v1.2.6
         with:
           username: ${{ secrets.CPANEL_SSH_USERNAME }}
@@ -36,4 +36,15 @@ jobs:
           ssh_private_key: ${{ secrets.CPANEL_SSH_PRIVATE_KEY }}
           local_path: './dist/*'
           remote_path: '/home/ashrafarif/public_html'
+          sftpArgs: '-o ConnectTimeout=20'
+
+      - name: Deploy backend (server-php) to cPanel via SFTP
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.6
+        with:
+          username: ${{ secrets.CPANEL_SSH_USERNAME }}
+          server: ${{ secrets.CPANEL_SSH_HOST }}
+          port: ${{ secrets.CPANEL_SSH_PORT }}
+          ssh_private_key: ${{ secrets.CPANEL_SSH_PRIVATE_KEY }}
+          local_path: './server-php/*'
+          remote_path: '/home/ashrafarif/public_html/api'
           sftpArgs: '-o ConnectTimeout=20'
