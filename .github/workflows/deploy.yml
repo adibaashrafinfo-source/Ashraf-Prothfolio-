@@ -27,13 +27,13 @@ jobs:
         env:
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
 
-      - name: Deploy to cPanel via rsync (SSH)
-        uses: easingthemes/ssh-deploy@v6
+      - name: Deploy to cPanel via SFTP
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.6
         with:
-          SSH_PRIVATE_KEY: ${{ secrets.CPANEL_SSH_PRIVATE_KEY }}
-          REMOTE_HOST: ${{ secrets.CPANEL_SSH_HOST }}
-          REMOTE_PORT: ${{ secrets.CPANEL_SSH_PORT }}
-          REMOTE_USER: ${{ secrets.CPANEL_SSH_USERNAME }}
-          SOURCE: 'dist/'
-          TARGET: '/home/ashrafarif/public_html/'
-          ARGS: '-avzr --delete --exclude=".git/" --exclude=".github/" --exclude="api/"'
+          username: ${{ secrets.CPANEL_SSH_USERNAME }}
+          server: ${{ secrets.CPANEL_SSH_HOST }}
+          port: ${{ secrets.CPANEL_SSH_PORT }}
+          ssh_private_key: ${{ secrets.CPANEL_SSH_PRIVATE_KEY }}
+          local_path: './dist/*'
+          remote_path: '/home/ashrafarif/public_html'
+          sftpArgs: '-o ConnectTimeout=20'
