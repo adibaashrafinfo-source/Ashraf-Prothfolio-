@@ -28,7 +28,7 @@ jobs:
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
 
       - name: Deploy to cPanel via rsync (SSH)
-        uses: easingthemes/ssh-deploy@v5
+        uses: easingthemes/ssh-deploy@v6
         with:
           SSH_PRIVATE_KEY: ${{ secrets.CPANEL_SSH_PRIVATE_KEY }}
           REMOTE_HOST: ${{ secrets.CPANEL_SSH_HOST }}
