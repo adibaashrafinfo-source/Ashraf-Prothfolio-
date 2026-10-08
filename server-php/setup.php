@@ -8,8 +8,19 @@
  */
 
 declare(strict_types=1);
+error_reporting(E_ALL);
+ini_set('display_errors', '0');
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/db.php';
+
+set_exception_handler(function (Throwable $e) {
+    error_log('[setup.php] ' . $e->getMessage());
+    http_response_code(500);
+    echo '<!doctype html><meta charset="utf-8"><body style="font-family:sans-serif;max-width:480px;margin:60px auto;padding:0 16px">'
+        . '<h1>Something went wrong</h1><p>' . htmlspecialchars($e->getMessage()) . '</p>'
+        . '<p>Check config.php (db host/name/user/password) and that schema.sql has been imported.</p></body>';
+    exit;
+});
 
 function render(string $body, ?string $message = null, ?string $error = null): never
 {
