@@ -9,8 +9,9 @@ function LogoTile({ logo, duplicate = false }: { logo: ClientLogo; duplicate?: b
       alt={logo.name}
       title={logo.name}
       loading="lazy"
-      /* object-contain keeps the whole logo visible whatever its source size or ratio */
-      className="max-h-12 w-auto max-w-full object-contain"
+      /* h-full/w-full (not max-h) lets object-contain scale small source logos UP to fill
+         the tile, not just shrink large ones down */
+      className="h-full w-full object-contain"
     />
   )
 
@@ -18,7 +19,7 @@ function LogoTile({ logo, duplicate = false }: { logo: ClientLogo; duplicate?: b
     <li
       aria-hidden={duplicate}
       className={cn(
-        'border-border bg-card flex h-20 w-40 shrink-0 items-center justify-center rounded-xl border px-5 shadow-sm',
+        'flex h-20 w-40 shrink-0 items-center justify-center rounded-xl border border-black/5 bg-white px-5 py-3 shadow-sm',
         /* the seamless-loop clone is pointless once the marquee is stopped */
         duplicate && 'motion-reduce:hidden',
       )}
