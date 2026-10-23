@@ -124,6 +124,23 @@ code:
   accepted quotation into an invoice that tracks its due date and paid amount. Your logo and
   contact details come from Site Settings.
 
+- **CRM — Clients** — your full client database (contact, company, source, notes) with each
+  client's lifetime value, paid and outstanding due. Leads convert into clients in one click.
+- **CRM — Projects** — every client project with a stage pipeline generated from its service
+  (e.g. Website: Requirement → UI/UX Design → Frontend → Backend → Database → Testing → Launch).
+  Set each stage to Pending / Running / Done / Hold / Skip with one click; progress, the current
+  stage and an activity log update automatically. Add custom stages, notes for the client,
+  live/preview links, deadlines and priority.
+- **CRM — Payments** — advance, installment, final and refund payments (bKash, Nagad, bank…)
+  per project, with a monthly ledger, method breakdown and CSV export. Total / advance / paid /
+  due are calculated for every project and client.
+- **CRM — Daily Report** — any day's collections, stages started/finished, projects in
+  progress, upcoming and overdue deadlines, and all activity. Printable.
+- **Client dashboard** (`/client/login`) — enable access per client from their CRM page (set
+  or generate a password, then "Copy login details"). Clients see only their own projects:
+  the stage timeline, progress, payments, due amount, your messages and updates. Internal notes
+  never reach the client. Turning access off signs them out immediately.
+
 ### Setting up your admin login
 
 1. Deploy `server-php/` and import `schema.sql` (see

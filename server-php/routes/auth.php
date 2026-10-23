@@ -22,7 +22,7 @@ function handle_auth(string $method, array $segments, array $config): void
             error_response('Invalid email or password.', 401);
         }
 
-        $token = jwt_sign(['sub' => $user['id'], 'email' => $user['email']], $config['jwt_secret']);
+        $token = jwt_sign(['sub' => $user['id'], 'email' => $user['email'], 'role' => 'admin'], $config['jwt_secret']);
         json_response(['token' => $token, 'email' => $user['email']]);
     }
 

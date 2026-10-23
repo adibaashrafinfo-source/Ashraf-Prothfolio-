@@ -16,6 +16,9 @@ function db(): PDO
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES => false,
     ]);
+    // Keep NOW()/CURRENT_TIMESTAMP in the same zone PHP uses (offset form works
+    // even when the host never loaded MySQL's named time-zone tables).
+    $pdo->exec("SET time_zone = '" . (new DateTime())->format('P') . "'");
 
     return $pdo;
 }

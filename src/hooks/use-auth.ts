@@ -1,31 +1,9 @@
 import * as React from 'react'
 
-import { ApiError, apiPost, clearToken, getToken, isApiConfigured, setToken } from '@/lib/apiClient'
-
-interface TokenPayload {
-  exp: number
-}
-
-function decodeTokenExpiry(token: string): number | null {
-  try {
-    const payloadB64 = token.split('.')[1]
-    const json = atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/'))
-    const payload = JSON.parse(json) as TokenPayload
-    return payload.exp ?? null
-  } catch {
-    return null
-  }
-}
-
-function isTokenValid(token: string | null): boolean {
-  if (!token) return false
-  const exp = decodeTokenExpiry(token)
-  if (exp === null) return false
-  return exp * 1000 > Date.now()
-}
+import { ApiError, apiPost, clearToken, hasValidToken, isApiConfigured, setToken } from '@/lib/apiClient'
 
 export function useAuth() {
-  const [isAuthenticated, setIsAuthenticated] = React.useState(() => isTokenValid(getToken()))
+  const [isAuthenticated, setIsAuthenticated] = React.useState(() => hasValidToken('admin'))
 
   const signIn = React.useCallback(async (email: string, password: string) => {
     if (!isApiConfigured()) return { error: 'The API is not configured.' }

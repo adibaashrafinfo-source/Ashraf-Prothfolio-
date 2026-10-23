@@ -61,12 +61,32 @@ function current_user(array $config): ?array
     return jwt_verify($token, $config['jwt_secret']);
 }
 
-/** Call at the top of any admin-only route. Exits with 401 if not authenticated. */
+/**
+ * Call at the top of any admin-only route. Exits with 401 if not authenticated.
+ * Client-portal tokens are signed with the same secret, so the role check is
+ * what keeps them out; tokens issued before roles existed are admin tokens.
+ */
 function require_auth(array $config): array
 {
     $user = current_user($config);
-    if ($user === null) {
+    if ($user === null || ($user['role'] ?? 'admin') !== 'admin') {
         error_response('Unauthorized', 401);
     }
     return $user;
+}
+
+/** Client-portal routes: returns the signed-in client's row, re-checked on every request. */
+function require_client(array $config): array
+{
+    $payload = current_user($config);
+    if ($payload === null || ($payload['role'] ?? null) !== 'client' || empty($payload['sub'])) {
+        error_response('Unauthorized', 401);
+    }
+    $stmt = db()->prepare('SELECT * FROM crm_clients WHERE id = ? AND portal_enabled = 1');
+    $stmt->execute([(string) $payload['sub']]);
+    $client = $stmt->fetch();
+    if (!$client) {
+        error_response('Unauthorized', 401);
+    }
+    return $client;
 }

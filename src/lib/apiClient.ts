@@ -1,38 +1,61 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL as string | undefined
 
-const TOKEN_KEY = 'portfolio_admin_token'
+/** Admin and client-portal sessions are stored separately so one never overwrites the other. */
+export type AuthScope = 'admin' | 'client'
+
+const TOKEN_KEYS: Record<AuthScope, string> = {
+  admin: 'portfolio_admin_token',
+  client: 'portfolio_client_token',
+}
 
 export function isApiConfigured(): boolean {
   return Boolean(API_BASE)
 }
 
-export function getToken(): string | null {
+export function getToken(scope: AuthScope = 'admin'): string | null {
   try {
-    return localStorage.getItem(TOKEN_KEY)
+    return localStorage.getItem(TOKEN_KEYS[scope])
   } catch {
     return null
   }
 }
 
-export function setToken(token: string): void {
+export function setToken(token: string, scope: AuthScope = 'admin'): void {
   try {
-    localStorage.setItem(TOKEN_KEY, token)
+    localStorage.setItem(TOKEN_KEYS[scope], token)
   } catch {
     // Storage unavailable (private mode, etc.) — session just won't persist.
   }
 }
 
-export function clearToken(): void {
+export function clearToken(scope: AuthScope = 'admin'): void {
   try {
-    localStorage.removeItem(TOKEN_KEY)
+    localStorage.removeItem(TOKEN_KEYS[scope])
   } catch {
     // Nothing to clean up if storage was never reachable.
   }
 }
 
+/** True when a stored JWT exists and its `exp` is still in the future. */
+export function hasValidToken(scope: AuthScope = 'admin'): boolean {
+  const token = getToken(scope)
+  if (!token) return false
+  try {
+    const json = atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))
+    const exp = (JSON.parse(json) as { exp?: number }).exp
+    return typeof exp === 'number' && exp * 1000 > Date.now()
+  } catch {
+    return false
+  }
+}
+
 export class ApiError extends Error {}
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+async function request<T>(
+  path: string,
+  options: RequestInit = {},
+  scope: AuthScope = 'admin',
+): Promise<T> {
   if (!API_BASE) {
     throw new ApiError('The API is not configured. Set VITE_API_BASE_URL in your .env file.')
   }
@@ -41,7 +64,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   if (!(options.body instanceof FormData) && options.body !== undefined) {
     headers.set('Content-Type', 'application/json')
   }
-  const token = getToken()
+  const token = getToken(scope)
   if (token) {
     headers.set('Authorization', `Bearer ${token}`)
   }
@@ -61,7 +84,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     } catch {
       // Non-JSON error body — keep the generic message.
     }
-    if (res.status === 401) clearToken()
+    if (res.status === 401) clearToken(scope)
     throw new ApiError(message)
   }
 
@@ -87,4 +110,17 @@ export async function apiUpload(file: File, folder: string): Promise<string> {
   form.append('folder', folder)
   const data = await request<{ url: string }>('/upload', { method: 'POST', body: form })
   return data.url
+}
+
+export const portalGet = <T>(path: string): Promise<T> =>
+  request<T>(`/portal${path}`, { method: 'GET' }, 'client')
+
+export const portalPost = <T>(path: string, body: unknown): Promise<T> =>
+  request<T>(`/portal${path}`, { method: 'POST', body: JSON.stringify(body) }, 'client')
+
+export const portalPut = <T>(path: string, body: unknown): Promise<T> =>
+  request<T>(`/portal${path}`, { method: 'PUT', body: JSON.stringify(body) }, 'client')
+
+export function errorMessage(err: unknown): string {
+  return err instanceof ApiError ? err.message : 'Could not reach the server.'
 }

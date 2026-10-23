@@ -66,6 +66,10 @@ export function Footer() {
         <div className="border-border flex flex-col items-center justify-between gap-4 border-t pt-6 sm:flex-row">
           <p className="text-muted-foreground text-sm">
             &copy; {year} {site.name}. All rights reserved.
+            <span className="mx-2">·</span>
+            <a href="/client/login" className="hover:text-primary font-medium">
+              Client Login
+            </a>
           </p>
           <Button
             variant="outline"

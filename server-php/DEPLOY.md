@@ -143,3 +143,10 @@ writable by PHP — see step 5.
 **Wrong timezone on dates.** PHP's `date()`/`DATETIME` defaults to the server's timezone. If
 your host runs UTC and you want Dhaka time, set `date_default_timezone_set('Asia/Dhaka');` at the
 top of `index.php`, or ask your host to set `date.timezone` in `php.ini`.
+
+## CRM tables
+
+The CRM (clients, projects, payments, activity) creates its own tables automatically the first
+time any CRM page is opened — no extra phpMyAdmin import is needed after deploying. Fresh
+installs get them from `schema.sql` too. Dates for the daily report use `timezone` in
+`config.php` (defaults to `Asia/Dhaka`).

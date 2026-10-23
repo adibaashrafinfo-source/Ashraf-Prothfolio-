@@ -28,4 +28,7 @@ return [
     // Public base URL of THIS api folder (no trailing slash) — used to build
     // public URLs for uploaded images.
     'base_url' => 'https://your-domain.com/api',
+
+    // Timezone used for CRM dates and the daily report.
+    'timezone' => 'Asia/Dhaka',
 ];

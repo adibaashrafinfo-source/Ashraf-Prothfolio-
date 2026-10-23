@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronDown, FileText, Loader2, Mail, Trash2 } from 'lucide-react'
+import { ChevronDown, FileText, Loader2, Mail, Trash2, UserPlus } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useAdminTable } from '@/hooks/use-admin-table'
 import { useToast } from '@/hooks/use-toast'
-import { ApiError, apiDelete, apiPut } from '@/lib/apiClient'
+import { ApiError, apiDelete, apiPost, apiPut } from '@/lib/apiClient'
 import { CURRENCIES, formatMoney, leadStatusMeta } from '@/lib/leadMeta'
 import { cn } from '@/lib/utils'
 import { LEAD_STATUSES } from '@/types'
@@ -101,6 +101,26 @@ export function LeadsPage() {
       toast({
         variant: 'destructive',
         title: 'Could not save',
+        description: err instanceof ApiError ? err.message : 'Could not reach the server.',
+      })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const convert = async (lead: Lead) => {
+    if (!window.confirm(`Add ${lead.name} as a CRM client${lead.project_name ? ` and create the project "${lead.project_name}"` : ''}? Save any edits above first.`)) return
+    setSaving(true)
+    try {
+      const res = await apiPost<{ client_id: string; project_id: string | null; existing: boolean }>('/crm/convert-lead', {
+        lead_id: lead.id,
+      })
+      toast({ title: res.existing ? 'Added to existing client' : 'Client created from lead' })
+      navigate(res.project_id ? `/admin/crm/projects/${res.project_id}` : `/admin/crm/clients/${res.client_id}`)
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: 'Could not convert lead',
         description: err instanceof ApiError ? err.message : 'Could not reach the server.',
       })
     } finally {
@@ -386,6 +406,10 @@ export function LeadsPage() {
                       >
                         <FileText className="size-4" />
                         Create quotation
+                      </Button>
+                      <Button variant="outline" className="gap-2" disabled={saving} onClick={() => convert(lead)}>
+                        <UserPlus className="size-4" />
+                        Convert to client
                       </Button>
                     </div>
                   </div>

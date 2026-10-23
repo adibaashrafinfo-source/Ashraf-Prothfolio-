@@ -1,23 +1,116 @@
 import * as React from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { LogOut, Menu, X } from 'lucide-react'
+import {
+  Briefcase,
+  Building2,
+  CalendarDays,
+  ExternalLink,
+  FileText,
+  FolderKanban,
+  LayoutDashboard,
+  LogOut,
+  Mail,
+  Menu,
+  MessageSquareQuote,
+  Receipt,
+  Settings,
+  Share2,
+  Users,
+  Wallet,
+  X,
+} from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Toaster } from '@/components/ui/toaster'
 import { useAuth } from '@/hooks/use-auth'
 import { cn } from '@/lib/utils'
 
-const adminLinks = [
-  { label: 'Dashboard', to: '/admin' },
-  { label: 'Leads', to: '/admin/leads' },
-  { label: 'Quotations', to: '/admin/quotations' },
-  { label: 'Invoices', to: '/admin/invoices' },
-  { label: 'Portfolio', to: '/admin/portfolio' },
-  { label: 'Clients', to: '/admin/clients' },
-  { label: 'Testimonials', to: '/admin/testimonials' },
-  { label: 'Social Links', to: '/admin/social' },
-  { label: 'Site Settings', to: '/admin/settings' },
+const navGroups = [
+  {
+    label: null,
+    links: [{ label: 'Dashboard', to: '/admin', icon: LayoutDashboard }],
+  },
+  {
+    label: 'CRM',
+    links: [
+      { label: 'Clients', to: '/admin/crm/clients', icon: Users },
+      { label: 'Projects', to: '/admin/crm/projects', icon: FolderKanban },
+      { label: 'Payments', to: '/admin/crm/payments', icon: Wallet },
+      { label: 'Daily Report', to: '/admin/crm/reports', icon: CalendarDays },
+    ],
+  },
+  {
+    label: 'Sales',
+    links: [
+      { label: 'Leads', to: '/admin/leads', icon: Mail },
+      { label: 'Quotations', to: '/admin/quotations', icon: FileText },
+      { label: 'Invoices', to: '/admin/invoices', icon: Receipt },
+    ],
+  },
+  {
+    label: 'Website',
+    links: [
+      { label: 'Portfolio', to: '/admin/portfolio', icon: Briefcase },
+      { label: 'Client Logos', to: '/admin/clients', icon: Building2 },
+      { label: 'Testimonials', to: '/admin/testimonials', icon: MessageSquareQuote },
+      { label: 'Social Links', to: '/admin/social', icon: Share2 },
+      { label: 'Site Settings', to: '/admin/settings', icon: Settings },
+    ],
+  },
 ]
+
+function SidebarNav({ onNavigate, onSignOut }: { onNavigate?: () => void; onSignOut: () => void }) {
+  return (
+    <div className="flex h-full flex-col">
+      <nav className="flex flex-1 flex-col gap-5 overflow-y-auto px-3 py-4">
+        {navGroups.map((group) => (
+          <div key={group.label ?? 'main'} className="flex flex-col gap-0.5">
+            {group.label && (
+              <p className="text-muted-foreground px-3 pb-1 text-[11px] font-semibold tracking-wider uppercase">
+                {group.label}
+              </p>
+            )}
+            {group.links.map((link) => (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                end={link.to === '/admin' || link.to === '/admin/clients'}
+                onClick={onNavigate}
+                className={({ isActive }) =>
+                  cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                    isActive
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
+                  )
+                }
+              >
+                <link.icon className="size-4 shrink-0" />
+                {link.label}
+              </NavLink>
+            ))}
+          </div>
+        ))}
+      </nav>
+      <div className="border-border flex flex-col gap-0.5 border-t p-3">
+        <a
+          href="/"
+          target="_blank"
+          rel="noreferrer"
+          className="text-muted-foreground hover:bg-secondary hover:text-foreground flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium"
+        >
+          <ExternalLink className="size-4" /> View site
+        </a>
+        <button
+          onClick={onSignOut}
+          className="text-muted-foreground hover:bg-secondary hover:text-foreground flex items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium"
+        >
+          <LogOut className="size-4" /> Sign out
+        </button>
+      </div>
+    </div>
+  )
+}
 
 export function AdminLayout() {
   const { signOut } = useAuth()
@@ -29,102 +122,45 @@ export function AdminLayout() {
     navigate('/admin/login')
   }
 
+  const brand = (
+    <span className="font-display text-lg font-bold">
+      Admin<span className="text-primary">.</span>
+    </span>
+  )
+
   return (
     <div className="bg-secondary/30 min-h-screen">
-      <header className="border-border bg-background border-b print:hidden">
-        <div className="container-px mx-auto flex h-16 max-w-6xl items-center justify-between">
-          <span className="font-display text-lg font-bold">
-            Admin<span className="text-primary">.</span>
-          </span>
+      <aside className="border-border bg-background fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r lg:flex print:hidden">
+        <div className="border-border flex h-16 shrink-0 items-center border-b px-6">{brand}</div>
+        <SidebarNav onSignOut={handleSignOut} />
+      </aside>
 
-          <nav className="hidden items-center gap-0.5 xl:flex">
-            {adminLinks.map((link) => (
-              <NavLink
-                key={link.to}
-                to={link.to}
-                end={link.to === '/admin'}
-                className={({ isActive }) =>
-                  cn(
-                    'rounded-full px-3.5 py-2 text-sm font-medium transition-colors',
-                    isActive
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-muted-foreground hover:text-foreground',
-                  )
-                }
-              >
-                {link.label}
-              </NavLink>
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-2">
-            <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
-              <a href="/" target="_blank" rel="noreferrer">
-                View site
-              </a>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="hidden gap-2 sm:inline-flex"
-              onClick={handleSignOut}
-            >
-              <LogOut className="size-4" />
-              Sign out
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="xl:hidden"
-              aria-label="Toggle menu"
-              onClick={() => setOpen((v) => !v)}
-            >
-              {open ? <X /> : <Menu />}
-            </Button>
-          </div>
-        </div>
-
-        {open && (
-          <nav className="border-border container-px mx-auto flex max-w-6xl flex-col gap-1 border-t py-3 xl:hidden">
-            {adminLinks.map((link) => (
-              <NavLink
-                key={link.to}
-                to={link.to}
-                end={link.to === '/admin'}
-                onClick={() => setOpen(false)}
-                className={({ isActive }) =>
-                  cn(
-                    'rounded-lg px-3 py-2.5 text-sm font-medium',
-                    isActive
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-muted-foreground hover:bg-secondary',
-                  )
-                }
-              >
-                {link.label}
-              </NavLink>
-            ))}
-            <a
-              href="/"
-              target="_blank"
-              rel="noreferrer"
-              className="text-muted-foreground rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-secondary"
-            >
-              View site
-            </a>
-            <button
-              onClick={handleSignOut}
-              className="text-muted-foreground flex items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-medium hover:bg-secondary"
-            >
-              <LogOut className="size-4" />
-              Sign out
-            </button>
-          </nav>
-        )}
+      <header className="border-border bg-background sticky top-0 z-40 flex h-14 items-center justify-between border-b px-4 lg:hidden print:hidden">
+        {brand}
+        <Button variant="ghost" size="icon" aria-label="Open menu" aria-expanded={open} onClick={() => setOpen(true)}>
+          <Menu />
+        </Button>
       </header>
 
-      <main className="container-px mx-auto max-w-6xl py-10 print:max-w-none print:p-0">
-        <Outlet />
+      {open && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
+          <aside className="bg-background absolute inset-y-0 left-0 flex w-72 flex-col shadow-xl">
+            <div className="border-border flex h-14 shrink-0 items-center justify-between border-b px-4">
+              {brand}
+              <Button variant="ghost" size="icon" aria-label="Close menu" onClick={() => setOpen(false)}>
+                <X />
+              </Button>
+            </div>
+            <SidebarNav onNavigate={() => setOpen(false)} onSignOut={handleSignOut} />
+          </aside>
+        </div>
+      )}
+
+      <main className="lg:pl-60 print:pl-0">
+        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10 print:max-w-none print:p-0">
+          <Outlet />
+        </div>
       </main>
       <Toaster />
     </div>

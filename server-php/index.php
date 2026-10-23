@@ -27,6 +27,9 @@ require_once __DIR__ . '/routes/client_logos.php';
 require_once __DIR__ . '/routes/leads.php';
 require_once __DIR__ . '/routes/documents.php';
 require_once __DIR__ . '/routes/auth.php';
+require_once __DIR__ . '/routes/crm_schema.php';
+require_once __DIR__ . '/routes/crm.php';
+require_once __DIR__ . '/routes/portal.php';
 require_once __DIR__ . '/routes/upload.php';
 
 set_exception_handler(function (Throwable $e) {
@@ -38,6 +41,10 @@ if (!file_exists(__DIR__ . '/config.php')) {
     json_response(['error' => 'config.php is missing — copy config.example.php to config.php and fill it in.'], 500);
 }
 $config = require __DIR__ . '/config.php';
+
+// Dates for the CRM's daily report follow this zone (MySQL is synced to it in db.php).
+$timezone = $config['timezone'] ?? 'Asia/Dhaka';
+date_default_timezone_set(in_array($timezone, timezone_identifiers_list(), true) ? $timezone : 'Asia/Dhaka');
 
 apply_cors($config);
 
@@ -60,6 +67,8 @@ match ($resource) {
     'leads' => handle_leads($method, $segments, $config),
     'documents' => handle_documents($method, $segments, $config),
     'auth' => handle_auth($method, $segments, $config),
+    'crm' => handle_crm($method, $segments, $config),
+    'portal' => handle_portal($method, $segments, $config),
     'upload' => handle_upload($method, $config),
     '', 'health' => json_response(['ok' => true, 'service' => 'portfolio-api']),
     default => error_response('Not found', 404),
