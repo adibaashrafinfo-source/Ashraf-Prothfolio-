@@ -8,6 +8,7 @@ import {
   FileText,
   FolderKanban,
   LayoutDashboard,
+  KeyRound,
   LogOut,
   Mail,
   Menu,
@@ -20,9 +21,11 @@ import {
   X,
 } from 'lucide-react'
 
+import { ChangePasswordModal } from '@/components/admin/ChangePasswordModal'
 import { Button } from '@/components/ui/button'
 import { Toaster } from '@/components/ui/toaster'
 import { useAuth } from '@/hooks/use-auth'
+import { apiPut } from '@/lib/apiClient'
 import { cn } from '@/lib/utils'
 
 const navGroups = [
@@ -59,7 +62,15 @@ const navGroups = [
   },
 ]
 
-function SidebarNav({ onNavigate, onSignOut }: { onNavigate?: () => void; onSignOut: () => void }) {
+function SidebarNav({
+  onNavigate,
+  onSignOut,
+  onChangePassword,
+}: {
+  onNavigate?: () => void
+  onSignOut: () => void
+  onChangePassword: () => void
+}) {
   return (
     <div className="flex h-full flex-col">
       <nav className="flex flex-1 flex-col gap-5 overflow-y-auto px-3 py-4">
@@ -102,6 +113,12 @@ function SidebarNav({ onNavigate, onSignOut }: { onNavigate?: () => void; onSign
           <ExternalLink className="size-4" /> View site
         </a>
         <button
+          onClick={onChangePassword}
+          className="text-muted-foreground hover:bg-secondary hover:text-foreground flex items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium"
+        >
+          <KeyRound className="size-4" /> Change password
+        </button>
+        <button
           onClick={onSignOut}
           className="text-muted-foreground hover:bg-secondary hover:text-foreground flex items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium"
         >
@@ -116,6 +133,11 @@ export function AdminLayout() {
   const { signOut } = useAuth()
   const navigate = useNavigate()
   const [open, setOpen] = React.useState(false)
+  const [pwOpen, setPwOpen] = React.useState(false)
+  const openPassword = () => {
+    setOpen(false)
+    setPwOpen(true)
+  }
 
   const handleSignOut = async () => {
     await signOut()
@@ -132,7 +154,7 @@ export function AdminLayout() {
     <div className="bg-secondary/30 min-h-screen">
       <aside className="border-border bg-background fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r lg:flex print:hidden">
         <div className="border-border flex h-16 shrink-0 items-center border-b px-6">{brand}</div>
-        <SidebarNav onSignOut={handleSignOut} />
+        <SidebarNav onSignOut={handleSignOut} onChangePassword={openPassword} />
       </aside>
 
       <header className="border-border bg-background sticky top-0 z-40 flex h-14 items-center justify-between border-b px-4 lg:hidden print:hidden">
@@ -152,7 +174,7 @@ export function AdminLayout() {
                 <X />
               </Button>
             </div>
-            <SidebarNav onNavigate={() => setOpen(false)} onSignOut={handleSignOut} />
+            <SidebarNav onNavigate={() => setOpen(false)} onSignOut={handleSignOut} onChangePassword={openPassword} />
           </aside>
         </div>
       )}
@@ -162,6 +184,7 @@ export function AdminLayout() {
           <Outlet />
         </div>
       </main>
+      <ChangePasswordModal open={pwOpen} onClose={() => setPwOpen(false)} save={(body) => apiPut('/auth/password', body)} />
       <Toaster />
     </div>
   )

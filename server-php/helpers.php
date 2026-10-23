@@ -36,7 +36,13 @@ function uuid4(): string
 function apply_cors(array $config): void
 {
     $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-    if (in_array($origin, $config['allowed_origins'], true)) {
+    $site = fn (string $host) => preg_replace('/^www\./i', '', strtolower($host));
+    $originHost = (string) parse_url($origin, PHP_URL_HOST);
+    $originPort = parse_url($origin, PHP_URL_PORT);
+    $ownHost = (string) ($_SERVER['HTTP_HOST'] ?? '');
+    // http://, https:// and www. versions of this API's own site are always allowed.
+    $sameSite = $originHost !== '' && $site($originHost . ($originPort ? ":$originPort" : '')) === $site($ownHost);
+    if ($sameSite || in_array($origin, $config['allowed_origins'], true)) {
         header("Access-Control-Allow-Origin: $origin");
         header('Vary: Origin');
     }

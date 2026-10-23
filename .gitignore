@@ -30,3 +30,6 @@ server-php/uploads/*
 *.njsproj
 *.sln
 *.sw?
+
+# Presence of this file unlocks reset-admin.php — never commit/deploy it.
+server-php/reset-admin.txt

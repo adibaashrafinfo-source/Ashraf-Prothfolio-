@@ -150,3 +150,12 @@ The CRM (clients, projects, payments, activity) creates its own tables automatic
 time any CRM page is opened — no extra phpMyAdmin import is needed after deploying. Fresh
 installs get them from `schema.sql` too. Dates for the daily report use `timezone` in
 `config.php` (defaults to `Asia/Dhaka`).
+
+## Forgot the admin password?
+
+1. cPanel → File Manager → `public_html/api` → **+ File** → name it `reset-admin.txt` (empty).
+2. Open `https://your-domain.com/api/reset-admin.php`, pick the admin email and set a new password.
+3. The page deletes `reset-admin.txt` and locks itself again. It also refuses to work if the
+   file is older than 30 minutes. Never commit that file (it is gitignored).
+
+Once signed in, you can change the password any time from **Change password** in the admin sidebar.

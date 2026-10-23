@@ -26,6 +26,26 @@ function handle_auth(string $method, array $segments, array $config): void
         json_response(['token' => $token, 'email' => $user['email']]);
     }
 
+    if ($method === 'PUT' && $action === 'password') {
+        $payload = require_auth($config);
+        $body = read_json_body();
+        $current = (string) ($body['current_password'] ?? '');
+        $new = (string) ($body['new_password'] ?? '');
+
+        $stmt = db()->prepare('SELECT * FROM admin_users WHERE id = ?');
+        $stmt->execute([(string) ($payload['sub'] ?? '')]);
+        $user = $stmt->fetch();
+        if (!$user || !password_verify($current, $user['password_hash'])) {
+            error_response('Your current password is incorrect.');
+        }
+        if (strlen($new) < 8) {
+            error_response('New password must be at least 8 characters.');
+        }
+        db()->prepare('UPDATE admin_users SET password_hash = ? WHERE id = ?')
+            ->execute([password_hash($new, PASSWORD_BCRYPT), $user['id']]);
+        json_response(['ok' => true]);
+    }
+
     if ($method === 'GET' && $action === 'me') {
         $user = require_auth($config);
         json_response(['email' => $user['email']]);

@@ -1,4 +1,26 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL as string | undefined
+/**
+ * When the API lives on the same site as the page (ashrafarif.com/api), call it
+ * on the page's own origin. Otherwise opening the site as http:// or www. while
+ * the build points at https://ashrafarif.com/api turns login into a cross-origin
+ * request that the browser blocks — the password looks "wrong" when it isn't.
+ */
+function resolveApiBase(raw: string | undefined): string | undefined {
+  if (!raw) return undefined
+  const trimmed = raw.replace(/\/+$/, '')
+  if (typeof window === 'undefined') return trimmed
+  try {
+    const url = new URL(trimmed, window.location.origin)
+    const site = (host: string) => host.replace(/^www\./, '')
+    if (site(url.host) === site(window.location.host)) {
+      return window.location.origin + url.pathname.replace(/\/+$/, '')
+    }
+  } catch {
+    // Not a parseable URL — fall back to using it as-is.
+  }
+  return trimmed
+}
+
+const API_BASE = resolveApiBase(import.meta.env.VITE_API_BASE_URL as string | undefined)
 
 /** Admin and client-portal sessions are stored separately so one never overwrites the other. */
 export type AuthScope = 'admin' | 'client'
@@ -123,4 +145,9 @@ export const portalPut = <T>(path: string, body: unknown): Promise<T> =>
 
 export function errorMessage(err: unknown): string {
   return err instanceof ApiError ? err.message : 'Could not reach the server.'
+}
+
+/** Absolute URL of a file/page inside the API folder (e.g. the password reset page). */
+export function apiUrl(path: string): string {
+  return `${API_BASE ?? '/api'}${path}`
 }

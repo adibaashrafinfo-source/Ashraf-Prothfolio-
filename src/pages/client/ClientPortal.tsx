@@ -15,18 +15,16 @@ import {
   Wallet,
 } from 'lucide-react'
 
+import { ChangePasswordModal } from '@/components/admin/ChangePasswordModal'
 import { ActivityFeed } from '@/components/crm/ActivityFeed'
 import { EmptyState, MoneySummary, Pill, StatCard } from '@/components/crm/bits'
 import { StageTimeline } from '@/components/crm/StageTimeline'
 import { Logo } from '@/components/Logo'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Modal } from '@/components/ui/modal'
 import { Toaster } from '@/components/ui/toaster'
 import { useClientAuth } from '@/hooks/use-client-auth'
 import { useSiteSettings } from '@/hooks/use-site-settings'
-import { toast, useToast } from '@/hooks/use-toast'
+import { toast } from '@/hooks/use-toast'
 import { errorMessage, hasValidToken, portalGet, portalPut } from '@/lib/apiClient'
 import { deadlineLabel, formatDate, isOverdue, paymentTypeMeta, projectStatusMeta, stageStatusMeta } from '@/lib/crm'
 import { formatMoney } from '@/lib/leadMeta'
@@ -64,48 +62,6 @@ function ProgressRing({ value }: { value: number }) {
       </svg>
       <span className="font-display absolute inset-0 flex items-center justify-center text-xl font-bold">{value}%</span>
     </div>
-  )
-}
-
-function PasswordModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { toast } = useToast()
-  const [current, setCurrent] = React.useState('')
-  const [next, setNext] = React.useState('')
-  const [saving, setSaving] = React.useState(false)
-
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSaving(true)
-    try {
-      await portalPut('/password', { current_password: current, new_password: next })
-      toast({ title: 'Password changed' })
-      setCurrent('')
-      setNext('')
-      onClose()
-    } catch (err) {
-      toast({ variant: 'destructive', title: 'Could not change password', description: errorMessage(err) })
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  return (
-    <Modal open={open} onClose={onClose} title="Change password" className="max-w-md">
-      <form onSubmit={submit} className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="cur-pw">Current password</Label>
-          <Input id="cur-pw" type="password" autoComplete="current-password" required value={current} onChange={(e) => setCurrent(e.target.value)} />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="new-pw">New password (min 8 characters)</Label>
-          <Input id="new-pw" type="password" autoComplete="new-password" minLength={8} required value={next} onChange={(e) => setNext(e.target.value)} />
-        </div>
-        <Button type="submit" disabled={saving} className="gap-2">
-          {saving && <Loader2 className="size-4 animate-spin" />}
-          Update password
-        </Button>
-      </form>
-    </Modal>
   )
 }
 
@@ -406,7 +362,7 @@ export function ClientPortal() {
         ) : null}
       </main>
 
-      <PasswordModal open={pwOpen} onClose={() => setPwOpen(false)} />
+      <ChangePasswordModal open={pwOpen} onClose={() => setPwOpen(false)} save={(body) => portalPut('/password', body)} />
       <Toaster />
     </div>
   )

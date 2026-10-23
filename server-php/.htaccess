@@ -7,7 +7,7 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.php?_route=$1 [QSA,L]
 
 # Never serve config.php or schema.sql directly, even if someone guesses the URL.
-<FilesMatch "^(config\.php|schema\.sql|create_admin\.php)$">
+<FilesMatch "^(config\.php|schema\.sql|create_admin\.php|reset-admin\.txt)$">
     <IfModule mod_authz_core.c>
         Require all denied
     </IfModule>
