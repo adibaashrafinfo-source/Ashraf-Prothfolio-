@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { motion } from 'framer-motion'
 import { Navigate, useNavigate } from 'react-router-dom'
 import {
   CalendarClock,
@@ -25,7 +26,7 @@ import { Modal } from '@/components/ui/modal'
 import { Toaster } from '@/components/ui/toaster'
 import { useClientAuth } from '@/hooks/use-client-auth'
 import { useSiteSettings } from '@/hooks/use-site-settings'
-import { useToast } from '@/hooks/use-toast'
+import { toast, useToast } from '@/hooks/use-toast'
 import { errorMessage, hasValidToken, portalGet, portalPut } from '@/lib/apiClient'
 import { deadlineLabel, formatDate, isOverdue, paymentTypeMeta, projectStatusMeta, stageStatusMeta } from '@/lib/crm'
 import { formatMoney } from '@/lib/leadMeta'
@@ -47,16 +48,18 @@ function ProgressRing({ value }: { value: number }) {
     <div className="relative size-24 shrink-0">
       <svg viewBox="0 0 80 80" className="size-full -rotate-90">
         <circle cx="40" cy="40" r={r} className="stroke-secondary" strokeWidth="7" fill="none" />
-        <circle
+        <motion.circle
           cx="40"
           cy="40"
           r={r}
           fill="none"
           strokeWidth="7"
           strokeLinecap="round"
-          className={cn('transition-all duration-700', value === 100 ? 'stroke-emerald-500' : 'stroke-primary')}
+          className={cn('transition-colors duration-700', value === 100 ? 'stroke-emerald-500' : 'stroke-primary')}
           strokeDasharray={c}
-          strokeDashoffset={c * (1 - value / 100)}
+          initial={{ strokeDashoffset: c }}
+          animate={{ strokeDashoffset: c * (1 - value / 100) }}
+          transition={{ duration: 1.1, ease: 'easeOut' }}
         />
       </svg>
       <span className="font-display absolute inset-0 flex items-center justify-center text-xl font-bold">{value}%</span>
@@ -106,6 +109,9 @@ function PasswordModal({ open, onClose }: { open: boolean; onClose: () => void }
   )
 }
 
+/** How often the open dashboard re-checks for admin-side updates (shared hosting: polling, not sockets). */
+const POLL_MS = 15_000
+
 export function ClientPortal() {
   const { isAuthenticated, signOut } = useClientAuth()
   const { settings: site } = useSiteSettings()
@@ -115,22 +121,50 @@ export function ClientPortal() {
   const [selectedId, setSelectedId] = React.useState<string | null>(null)
   const [pwOpen, setPwOpen] = React.useState(false)
 
-  React.useEffect(() => {
-    if (!isAuthenticated) return
-    portalGet<PortalData>('/me')
-      .then((d) => {
+  const [lastSynced, setLastSynced] = React.useState<Date | null>(null)
+  const snapshot = React.useRef<string | null>(null)
+
+  /** silent = background refresh: no error banner, but announce changes made from the admin side. */
+  const load = React.useCallback(
+    async (silent: boolean) => {
+      try {
+        const d = await portalGet<PortalData>('/me')
+        const signature = JSON.stringify([d.projects, d.payments, d.activity.map((a) => a.id)])
+        if (silent && snapshot.current !== null && signature !== snapshot.current) {
+          toast({ title: 'Your project was just updated', description: d.activity[0]?.message })
+        }
+        snapshot.current = signature
         setData(d)
-        setSelectedId((id) => id ?? d.projects[0]?.id ?? null)
-      })
-      .catch((err) => {
+        setSelectedId((id) => (id && d.projects.some((p) => p.id === id) ? id : (d.projects[0]?.id ?? null)))
+        setLastSynced(new Date())
+        setError(null)
+      } catch (err) {
         if (!hasValidToken('client')) {
           signOut()
           navigate('/client/login', { replace: true })
           return
         }
-        setError(errorMessage(err))
-      })
-  }, [isAuthenticated, navigate, signOut])
+        if (!silent) setError(errorMessage(err))
+      }
+    },
+    [navigate, signOut],
+  )
+
+  React.useEffect(() => {
+    if (!isAuthenticated) return
+    load(false)
+    const refreshIfVisible = () => {
+      if (document.visibilityState === 'visible') load(true)
+    }
+    const timer = window.setInterval(refreshIfVisible, POLL_MS)
+    document.addEventListener('visibilitychange', refreshIfVisible)
+    window.addEventListener('focus', refreshIfVisible)
+    return () => {
+      window.clearInterval(timer)
+      document.removeEventListener('visibilitychange', refreshIfVisible)
+      window.removeEventListener('focus', refreshIfVisible)
+    }
+  }, [isAuthenticated, load])
 
   if (!isAuthenticated) return <Navigate to="/client/login" replace />
 
@@ -174,10 +208,24 @@ export function ClientPortal() {
           </div>
         ) : data ? (
           <>
-            <div>
-              <p className="text-muted-foreground text-sm">Welcome back,</p>
-              <h1 className="font-display text-3xl font-bold">{data.client.name}</h1>
-              {data.client.company && <p className="text-muted-foreground text-sm">{data.client.company}</p>}
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <p className="text-muted-foreground text-sm">Welcome back,</p>
+                <h1 className="font-display text-3xl font-bold">{data.client.name}</h1>
+                {data.client.company && <p className="text-muted-foreground text-sm">{data.client.company}</p>}
+              </div>
+              {lastSynced && (
+                <span
+                  className="border-border bg-card text-muted-foreground inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs"
+                  title="This page refreshes automatically when we update your project"
+                >
+                  <span className="relative flex size-2">
+                    <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-500 opacity-60" />
+                    <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
+                  </span>
+                  Live · updated {lastSynced.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' })}
+                </span>
+              )}
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -223,7 +271,7 @@ export function ClientPortal() {
                     <div className="flex flex-col gap-6 lg:col-span-2">
                       <section className="border-border bg-card rounded-2xl border p-6">
                         <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-                          <ProgressRing value={project.progress} />
+                          <ProgressRing key={project.id} value={project.progress} />
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2">
                               <h2 className="font-display text-xl font-bold">{project.title}</h2>
@@ -285,7 +333,7 @@ export function ClientPortal() {
 
                       <section className="border-border bg-card rounded-2xl border p-6">
                         <h3 className="font-display mb-5 text-base font-semibold">Project stages</h3>
-                        <StageTimeline stages={project.stages} />
+                        <StageTimeline key={project.id} stages={project.stages} />
                       </section>
                     </div>
 

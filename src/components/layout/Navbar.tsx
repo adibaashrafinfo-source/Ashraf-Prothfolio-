@@ -1,10 +1,12 @@
 import * as React from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Menu, Moon, Sun, X } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { LayoutDashboard, LogIn, Menu, Moon, Sun, X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Logo } from '@/components/Logo'
 import { Magnetic } from '@/components/Magnetic'
+import { hasValidToken } from '@/lib/apiClient'
 import { cn } from '@/lib/utils'
 import { useDarkMode } from '@/hooks/use-dark-mode'
 import { useSectionNav } from '@/hooks/use-section-nav'
@@ -19,6 +21,11 @@ export function Navbar() {
   const { theme, toggle } = useDarkMode()
   const { goToSection } = useSectionNav()
   const { settings: site } = useSiteSettings()
+  // A signed-in client goes straight to their dashboard instead of the login form.
+  const clientSignedIn = React.useMemo(() => hasValidToken('client'), [])
+  const portal = clientSignedIn
+    ? { to: '/client', label: 'Dashboard', Icon: LayoutDashboard }
+    : { to: '/client/login', label: 'Login', Icon: LogIn }
 
   React.useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12)
@@ -117,9 +124,20 @@ export function Navbar() {
           >
             {theme === 'dark' ? <Sun /> : <Moon />}
           </Button>
+          <Button asChild variant="outline" className="hidden gap-2 md:inline-flex" title="Client login">
+            <Link to={portal.to} aria-label={portal.label}>
+              <portal.Icon className="size-4" />
+              <span className="hidden lg:inline">{portal.label}</span>
+            </Link>
+          </Button>
           <Magnetic className="hidden md:inline-flex" strength={0.3}>
             <Button onClick={() => handleNavClick('#contact')}>Hire Me</Button>
           </Magnetic>
+          <Button asChild variant="ghost" size="icon" className="rounded-full md:hidden">
+            <Link to={portal.to} aria-label={portal.label}>
+              <portal.Icon />
+            </Link>
+          </Button>
           <Button
             variant="ghost"
             size="icon"
@@ -158,8 +176,14 @@ export function Navbar() {
                   </button>
                 </li>
               ))}
-              <li className="pt-2">
-                <Button className="w-full" onClick={() => handleNavClick('#contact')}>
+              <li className="flex gap-2 pt-2">
+                <Button asChild variant="outline" className="flex-1 gap-2">
+                  <Link to={portal.to}>
+                    <portal.Icon className="size-4" />
+                    {clientSignedIn ? 'My dashboard' : 'Client login'}
+                  </Link>
+                </Button>
+                <Button className="flex-1" onClick={() => handleNavClick('#contact')}>
                   Hire Me
                 </Button>
               </li>
