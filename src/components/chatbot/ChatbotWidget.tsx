@@ -7,13 +7,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
-import { ApiError, apiPost, isApiConfigured } from '@/lib/apiClient'
+import { ApiError, apiGet, apiPost, isApiConfigured } from '@/lib/apiClient'
 import { chatbotFallback, chatbotGreeting, chatbotTopics, type ChatbotTopic } from '@/data/chatbot'
 import { cn } from '@/lib/utils'
 
 type Turn =
   | { kind: 'bot'; id: string; text: string }
   | { kind: 'user'; id: string; text: string }
+  | { kind: 'thinking'; id: string }
   | { kind: 'menu'; id: string; topicIds: string[] }
   | { kind: 'lead-form'; id: string; prefill: string }
   | { kind: 'lead-sent'; id: string }
@@ -34,6 +35,9 @@ export function ChatbotWidget() {
   const { toast } = useToast()
   const [open, setOpen] = React.useState(false)
   const [hasOpenedOnce, setHasOpenedOnce] = React.useState(false)
+  const [aiEnabled, setAiEnabled] = React.useState<boolean | null>(null)
+  const [draft, setDraft] = React.useState('')
+  const [asking, setAsking] = React.useState(false)
   const [turns, setTurns] = React.useState<Turn[]>(() => [
     { kind: 'bot', id: nextId(), text: chatbotGreeting },
     { kind: 'menu', id: nextId(), topicIds: ALL_TOPIC_IDS },
@@ -45,6 +49,24 @@ export function ChatbotWidget() {
     const el = scrollRef.current
     if (el) el.scrollTop = el.scrollHeight
   }, [open, turns])
+
+  React.useEffect(() => {
+    if (!isApiConfigured()) {
+      setAiEnabled(false)
+      return
+    }
+    let cancelled = false
+    apiGet<{ enabled: boolean }>('/chatbot/status')
+      .then((res) => {
+        if (!cancelled) setAiEnabled(res.enabled)
+      })
+      .catch(() => {
+        if (!cancelled) setAiEnabled(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const toggle = () => {
     setOpen((v) => !v)
@@ -78,6 +100,40 @@ export function ChatbotWidget() {
         prefill: topicLabel ? `I'm interested in: ${topicLabel}. ` : '',
       },
     ])
+  }
+
+  const askAi = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const question = draft.trim()
+    if (!question || asking) return
+    setDraft('')
+
+    const history = turns
+      .filter((t): t is Extract<Turn, { kind: 'bot' | 'user' }> => t.kind === 'bot' || t.kind === 'user')
+      .slice(-8)
+      .map((t) => ({ role: t.kind === 'user' ? 'user' : 'assistant', content: t.text }))
+
+    const thinkingId = nextId()
+    setTurns((prev) => [
+      ...prev,
+      { kind: 'user', id: nextId(), text: question },
+      { kind: 'thinking', id: thinkingId },
+    ])
+    setAsking(true)
+    try {
+      const res = await apiPost<{ reply: string }>('/chatbot/ask', { message: question, history })
+      setTurns((prev) =>
+        prev.map((t) => (t.id === thinkingId ? { kind: 'bot', id: thinkingId, text: res.reply } : t)),
+      )
+    } catch (err) {
+      const message =
+        err instanceof ApiError
+          ? err.message
+          : "Sorry, I couldn't reach the AI assistant. Please try again or get a quote below."
+      setTurns((prev) => prev.map((t) => (t.id === thinkingId ? { kind: 'bot', id: thinkingId, text: message } : t)))
+    } finally {
+      setAsking(false)
+    }
   }
 
   return (
@@ -130,7 +186,9 @@ export function ChatbotWidget() {
               <Sparkles className="size-4.5" />
               <div>
                 <p className="text-sm font-semibold">Ask Arif's assistant</p>
-                <p className="text-xs opacity-80">Usually replies within a day</p>
+                <p className="text-xs opacity-80">
+                  {aiEnabled ? 'Ask anything, or pick a topic below' : 'Usually replies within a day'}
+                </p>
               </div>
             </div>
 
@@ -177,15 +235,38 @@ export function ChatbotWidget() {
               ))}
             </div>
 
-            <div className="border-t px-4 py-2.5">
-              <button
-                type="button"
-                onClick={() => openLeadForm()}
-                className="text-primary hover:text-primary/80 w-full text-center text-xs font-semibold"
-              >
-                Skip the chat — get a quote directly →
-              </button>
-            </div>
+            {aiEnabled ? (
+              <form onSubmit={askAi} className="flex items-center gap-2 border-t px-3 py-2.5">
+                <Input
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  placeholder="Ask me anything…"
+                  maxLength={600}
+                  disabled={asking}
+                  aria-label="Ask a question"
+                  className="h-9 text-sm"
+                />
+                <Button
+                  type="submit"
+                  size="icon"
+                  aria-label="Send message"
+                  className="size-9 shrink-0"
+                  disabled={asking || !draft.trim()}
+                >
+                  {asking ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+                </Button>
+              </form>
+            ) : (
+              <div className="border-t px-4 py-2.5">
+                <button
+                  type="button"
+                  onClick={() => openLeadForm()}
+                  className="text-primary hover:text-primary/80 w-full text-center text-xs font-semibold"
+                >
+                  Skip the chat — get a quote directly →
+                </button>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -221,6 +302,16 @@ function ChatTurn({
     return (
       <div className="bg-primary text-primary-foreground ml-auto max-w-[85%] rounded-2xl rounded-br-sm px-3.5 py-2.5 text-sm leading-snug">
         {turn.text}
+      </div>
+    )
+  }
+
+  if (turn.kind === 'thinking') {
+    return (
+      <div className="bg-secondary flex w-fit items-center gap-1 rounded-2xl rounded-bl-sm px-3.5 py-2.5">
+        <span className="bg-muted-foreground/60 size-1.5 animate-bounce rounded-full [animation-delay:-0.3s]" />
+        <span className="bg-muted-foreground/60 size-1.5 animate-bounce rounded-full [animation-delay:-0.15s]" />
+        <span className="bg-muted-foreground/60 size-1.5 animate-bounce rounded-full" />
       </div>
     )
   }

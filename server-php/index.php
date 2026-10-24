@@ -25,6 +25,7 @@ require_once __DIR__ . '/routes/projects.php';
 require_once __DIR__ . '/routes/testimonials.php';
 require_once __DIR__ . '/routes/client_logos.php';
 require_once __DIR__ . '/routes/leads.php';
+require_once __DIR__ . '/routes/chatbot.php';
 require_once __DIR__ . '/routes/documents.php';
 require_once __DIR__ . '/routes/auth.php';
 require_once __DIR__ . '/routes/crm_schema.php';
@@ -67,6 +68,7 @@ match ($resource) {
     'client-logos' => handle_client_logos($method, $segments, $config),
     'contact' => handle_contact($method),
     'leads' => handle_leads($method, $segments, $config),
+    'chatbot' => handle_chatbot_route($method, $segments, $config),
     'documents' => handle_documents($method, $segments, $config),
     'auth' => handle_auth($method, $segments, $config),
     'crm' => handle_crm($method, $segments, $config),

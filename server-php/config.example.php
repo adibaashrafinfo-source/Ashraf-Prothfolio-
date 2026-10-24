@@ -31,4 +31,11 @@ return [
 
     // Timezone used for CRM dates and the daily report.
     'timezone' => 'Asia/Dhaka',
+
+    // Anthropic API key for the public chatbot's free-form AI replies.
+    // Leave blank to disable AI chat — the widget still works with its
+    // button-menu FAQs and lead form, it just skips the "ask anything" box.
+    // Get a key at https://console.anthropic.com/settings/keys
+    'anthropic_api_key' => '',
+    'anthropic_model' => 'claude-haiku-5-5',
 ];
