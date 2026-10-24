@@ -113,6 +113,42 @@ export interface CrmActivity {
   client_name?: string | null
 }
 
+export const FILE_CATEGORIES = ['deliverable', 'client_asset'] as const
+export type FileCategory = (typeof FILE_CATEGORIES)[number]
+
+export interface CrmFile {
+  id: string
+  project_id: string
+  client_id?: string
+  category: FileCategory
+  file_name: string
+  url: string
+  size: number
+  mime: string
+  note: string | null
+  uploaded_by: 'admin' | 'client'
+  created_at: string
+  project_title?: string
+}
+
+export const APPROVAL_STATUSES = ['pending', 'approved', 'changes_requested'] as const
+export type ApprovalStatus = (typeof APPROVAL_STATUSES)[number]
+
+export interface StageApproval {
+  id: string
+  project_id: string
+  client_id?: string
+  stage_id: string
+  stage_name: string
+  round: number
+  status: ApprovalStatus
+  message: string | null
+  client_comment: string | null
+  requested_at: string
+  resolved_at: string | null
+  project_title?: string
+}
+
 export interface CrmClientDetail extends CrmClient {
   projects: CrmProject[]
   payments: CrmPayment[]
@@ -122,6 +158,8 @@ export interface CrmClientDetail extends CrmClient {
 export interface CrmProjectDetail extends CrmProject {
   payments: CrmPayment[]
   activity: CrmActivity[]
+  files: CrmFile[]
+  approvals: StageApproval[]
 }
 
 export interface CrmStats {
@@ -150,4 +188,6 @@ export interface PortalData {
   projects: CrmProject[]
   payments: CrmPayment[]
   activity: CrmActivity[]
+  files: CrmFile[]
+  approvals: StageApproval[]
 }

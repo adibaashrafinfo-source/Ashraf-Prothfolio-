@@ -1,4 +1,5 @@
 import type {
+  ApprovalStatus,
   CrmClientStatus,
   CrmProject,
   PaymentType,
@@ -119,6 +120,23 @@ export function deadlineLabel(project: CrmProject): string | null {
   if (days < 0) return `${-days}d overdue`
   if (days === 0) return 'Due today'
   return `${days}d left`
+}
+
+export const approvalStatusMeta: Record<ApprovalStatus, { label: string; className: string }> = {
+  pending: { label: 'Awaiting client', className: 'bg-amber-500/10 text-amber-600 dark:text-amber-400' },
+  approved: { label: 'Approved', className: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
+  changes_requested: { label: 'Changes requested', className: 'bg-rose-500/10 text-rose-600 dark:text-rose-400' },
+}
+
+export function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+export function fileExt(name: string): string {
+  const parts = name.split('.')
+  return parts.length > 1 ? parts[parts.length - 1].toUpperCase() : 'FILE'
 }
 
 export function generatePassword(): string {

@@ -28,6 +28,8 @@ require_once __DIR__ . '/routes/leads.php';
 require_once __DIR__ . '/routes/documents.php';
 require_once __DIR__ . '/routes/auth.php';
 require_once __DIR__ . '/routes/crm_schema.php';
+require_once __DIR__ . '/routes/crm_files.php';
+require_once __DIR__ . '/routes/crm_approvals.php';
 require_once __DIR__ . '/routes/crm.php';
 require_once __DIR__ . '/routes/portal.php';
 require_once __DIR__ . '/routes/upload.php';

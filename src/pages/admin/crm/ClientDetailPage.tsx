@@ -10,6 +10,7 @@ import { PaymentsTable } from '@/components/crm/PaymentsTable'
 import { PortalAccessCard } from '@/components/crm/PortalAccessCard'
 import { ProjectCard } from '@/components/crm/ProjectCard'
 import { ProjectFormModal } from '@/components/crm/ProjectFormModal'
+import { ReceiptModal } from '@/components/crm/Receipt'
 import { UpdateComposer } from '@/components/crm/UpdateComposer'
 import { Button } from '@/components/ui/button'
 import { useApiResource } from '@/hooks/use-api-resource'
@@ -29,6 +30,7 @@ export function ClientDetailPage() {
     open: false,
     payment: null,
   })
+  const [receiptPayment, setReceiptPayment] = React.useState<CrmPayment | null>(null)
 
   if (loading && !client) return <p className="text-muted-foreground text-sm">Loading…</p>
   if (error || !client) return <p className="text-destructive text-sm">{error ?? 'Client not found.'}</p>
@@ -145,6 +147,7 @@ export function ClientDetailPage() {
               showProject
               onEdit={(p) => setPaymentModal({ open: true, payment: p })}
               onDelete={deletePayment}
+              onReceipt={setReceiptPayment}
             />
           </SectionCard>
         </div>
@@ -199,6 +202,16 @@ export function ClientDetailPage() {
         payment={paymentModal.payment}
         clientId={client.id}
         onSaved={refetch}
+      />
+      <ReceiptModal
+        open={receiptPayment !== null}
+        onClose={() => setReceiptPayment(null)}
+        payment={receiptPayment}
+        context={
+          receiptPayment
+            ? { clientName: client.name, clientCompany: client.company, projectTitle: receiptPayment.project_title ?? '' }
+            : null
+        }
       />
     </div>
   )

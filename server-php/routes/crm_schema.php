@@ -98,6 +98,44 @@ function crm_schema_statements(): array
           CONSTRAINT fk_crm_activity_client FOREIGN KEY (client_id)
             REFERENCES crm_clients (id) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+
+        "CREATE TABLE IF NOT EXISTS crm_files (
+          id CHAR(36) NOT NULL PRIMARY KEY,
+          project_id CHAR(36) NOT NULL,
+          client_id CHAR(36) NOT NULL,
+          category ENUM('deliverable','client_asset') NOT NULL,
+          file_name VARCHAR(255) NOT NULL,
+          url VARCHAR(500) NOT NULL,
+          size INT NOT NULL,
+          mime VARCHAR(150) NOT NULL,
+          note VARCHAR(500) NULL,
+          uploaded_by ENUM('admin','client') NOT NULL,
+          created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          INDEX crm_files_project_idx (project_id),
+          CONSTRAINT fk_crm_files_project FOREIGN KEY (project_id)
+            REFERENCES crm_projects (id) ON DELETE CASCADE,
+          CONSTRAINT fk_crm_files_client FOREIGN KEY (client_id)
+            REFERENCES crm_clients (id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+
+        "CREATE TABLE IF NOT EXISTS crm_stage_approvals (
+          id CHAR(36) NOT NULL PRIMARY KEY,
+          project_id CHAR(36) NOT NULL,
+          client_id CHAR(36) NOT NULL,
+          stage_id VARCHAR(40) NOT NULL,
+          stage_name VARCHAR(100) NOT NULL,
+          round INT NOT NULL DEFAULT 1,
+          status ENUM('pending','approved','changes_requested') NOT NULL DEFAULT 'pending',
+          message TEXT NULL,
+          client_comment TEXT NULL,
+          requested_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          resolved_at DATETIME NULL,
+          INDEX crm_stage_approvals_project_idx (project_id),
+          CONSTRAINT fk_crm_approvals_project FOREIGN KEY (project_id)
+            REFERENCES crm_projects (id) ON DELETE CASCADE,
+          CONSTRAINT fk_crm_approvals_client FOREIGN KEY (client_id)
+            REFERENCES crm_clients (id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
     ];
 }
 
@@ -109,8 +147,10 @@ function crm_ensure_schema(PDO $pdo): void
     }
     $checked = true;
 
-    // crm_activity is created last, so its presence means every table exists.
-    if ($pdo->query("SHOW TABLES LIKE 'crm_activity'")->fetchColumn() !== false) {
+    // crm_stage_approvals is created last, so its presence means every table exists —
+    // including ones added after a site's first deploy (CREATE TABLE IF NOT EXISTS
+    // makes re-running the earlier statements on an existing DB harmless).
+    if ($pdo->query("SHOW TABLES LIKE 'crm_stage_approvals'")->fetchColumn() !== false) {
         return;
     }
     foreach (crm_schema_statements() as $sql) {

@@ -1,19 +1,22 @@
 import * as React from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, CalendarClock, ExternalLink, Eye, Pencil, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, CalendarClock, ExternalLink, Eye, Loader2, Pencil, Plus, Send, Trash2 } from 'lucide-react'
 
 import { ActivityFeed } from '@/components/crm/ActivityFeed'
 import { MoneySummary, Pill, ProgressBar, SectionCard } from '@/components/crm/bits'
-import { InlineSelect, toOptions } from '@/components/crm/fields'
+import { AreaField, InlineSelect, toOptions } from '@/components/crm/fields'
+import { FileVault } from '@/components/crm/FileVault'
 import { PaymentFormModal } from '@/components/crm/PaymentFormModal'
 import { PaymentsTable } from '@/components/crm/PaymentsTable'
 import { ProjectFormModal } from '@/components/crm/ProjectFormModal'
+import { ReceiptModal } from '@/components/crm/Receipt'
 import { StageEditor } from '@/components/crm/StageEditor'
 import { UpdateComposer } from '@/components/crm/UpdateComposer'
 import { Button } from '@/components/ui/button'
+import { Modal } from '@/components/ui/modal'
 import { useApiResource } from '@/hooks/use-api-resource'
 import { useToast } from '@/hooks/use-toast'
-import { apiDelete, apiPut, errorMessage } from '@/lib/apiClient'
+import { apiDelete, apiPost, apiPut, errorMessage } from '@/lib/apiClient'
 import { deadlineLabel, formatDate, isOverdue, priorityMeta, projectStatusMeta } from '@/lib/crm'
 import { cn } from '@/lib/utils'
 import { PROJECT_STATUSES } from '@/types/crm'
@@ -29,6 +32,8 @@ export function ProjectDetailPage() {
     open: false,
     payment: null,
   })
+  const [approvalStage, setApprovalStage] = React.useState<ProjectStage | null>(null)
+  const [receiptPayment, setReceiptPayment] = React.useState<CrmPayment | null>(null)
 
   if (loading && !project) return <p className="text-muted-foreground text-sm">Loading…</p>
   if (error || !project) return <p className="text-destructive text-sm">{error ?? 'Project not found.'}</p>
@@ -72,6 +77,23 @@ export function ProjectDetailPage() {
       refetch()
     } catch (err) {
       toast({ variant: 'destructive', title: 'Could not delete', description: errorMessage(err) })
+    }
+  }
+
+  const requestApproval = async (message: string) => {
+    if (!approvalStage) return
+    try {
+      await apiPost('/crm/approvals', {
+        project_id: project.id,
+        stage_id: approvalStage.id,
+        stage_name: approvalStage.name,
+        message: message || null,
+      })
+      toast({ title: 'Approval request sent to client' })
+      setApprovalStage(null)
+      refetch()
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'Could not send request', description: errorMessage(err) })
     }
   }
 
@@ -164,7 +186,13 @@ export function ProjectDetailPage() {
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="flex flex-col gap-6 lg:col-span-2">
           <SectionCard title={`Work stages (${project.stages.filter((s) => s.status === 'done').length}/${project.stages.length} done)`}>
-            <StageEditor stages={project.stages} onSave={saveStages} onReset={resetStages} />
+            <StageEditor
+              stages={project.stages}
+              approvals={project.approvals}
+              onSave={saveStages}
+              onReset={resetStages}
+              onRequestApproval={setApprovalStage}
+            />
           </SectionCard>
 
           <SectionCard
@@ -179,7 +207,12 @@ export function ProjectDetailPage() {
               payments={project.payments}
               onEdit={(p) => setPaymentModal({ open: true, payment: p })}
               onDelete={deletePayment}
+              onReceipt={setReceiptPayment}
             />
+          </SectionCard>
+
+          <SectionCard title={`Files (${project.files.length})`}>
+            <FileVault projectId={project.id} files={project.files} onChanged={refetch} />
           </SectionCard>
         </div>
 
@@ -243,6 +276,69 @@ export function ProjectDetailPage() {
         project={project}
         onSaved={refetch}
       />
+      <RequestApprovalModal stage={approvalStage} onClose={() => setApprovalStage(null)} onSend={requestApproval} />
+      <ReceiptModal
+        open={receiptPayment !== null}
+        onClose={() => setReceiptPayment(null)}
+        payment={receiptPayment}
+        context={{ clientName: project.client_name, clientCompany: project.client_company, projectTitle: project.title }}
+      />
     </div>
+  )
+}
+
+function RequestApprovalModal({
+  stage,
+  onClose,
+  onSend,
+}: {
+  stage: ProjectStage | null
+  onClose: () => void
+  onSend: (message: string) => Promise<void>
+}) {
+  const [message, setMessage] = React.useState('')
+  const [sending, setSending] = React.useState(false)
+
+  React.useEffect(() => {
+    if (stage) setMessage('')
+  }, [stage])
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSending(true)
+    await onSend(message)
+    setSending(false)
+  }
+
+  return (
+    <Modal
+      open={stage !== null}
+      onClose={onClose}
+      title="Request client approval"
+      description={stage ? `Stage: ${stage.name}` : undefined}
+      className="max-w-md"
+    >
+      <form onSubmit={submit} className="flex flex-col gap-4">
+        <AreaField
+          label="Message to client (optional)"
+          rows={3}
+          placeholder="e.g. “Homepage design is ready — please review and approve.”"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+        />
+        <p className="text-muted-foreground text-xs">
+          The client will see an "Approve" / "Request changes" card on their dashboard for this stage.
+        </p>
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={sending} className="gap-2">
+            {sending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+            Send request
+          </Button>
+        </div>
+      </form>
+    </Modal>
   )
 }

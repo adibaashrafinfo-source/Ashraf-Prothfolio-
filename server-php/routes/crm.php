@@ -336,6 +336,8 @@ function handle_crm(string $method, array $segments, array $config): void
         'projects' => crm_projects_route($pdo, $method, $id),
         'payments' => crm_payments_route($pdo, $method, $id),
         'activity' => crm_activity_route($pdo, $method, $id),
+        'files' => handle_crm_files($pdo, $config, $method, $id),
+        'approvals' => handle_crm_approvals($pdo, $method, $id),
         'stats' => crm_stats_route($pdo, $method),
         'convert-lead' => crm_convert_lead_route($pdo, $method),
         'service-types' => json_response(array_keys(CRM_STAGE_TEMPLATES)),
@@ -615,8 +617,14 @@ function crm_projects_route(PDO $pdo, string $method, ?string $id): void
         $payments->execute([$id]);
         $activity = $pdo->prepare('SELECT * FROM crm_activity WHERE project_id = ? ORDER BY created_at DESC LIMIT 100');
         $activity->execute([$id]);
+        $files = $pdo->prepare('SELECT * FROM crm_files WHERE project_id = ? ORDER BY created_at DESC');
+        $files->execute([$id]);
+        $approvals = $pdo->prepare('SELECT * FROM crm_stage_approvals WHERE project_id = ? ORDER BY requested_at DESC');
+        $approvals->execute([$id]);
         $project['payments'] = array_map('cast_crm_payment', $payments->fetchAll());
         $project['activity'] = array_map('cast_crm_activity', $activity->fetchAll());
+        $project['files'] = array_map('cast_crm_file', $files->fetchAll());
+        $project['approvals'] = array_map('cast_crm_approval', $approvals->fetchAll());
         json_response($project);
     }
 

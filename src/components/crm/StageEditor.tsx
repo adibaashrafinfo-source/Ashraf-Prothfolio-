@@ -1,12 +1,13 @@
 import * as React from 'react'
-import { ArrowDown, ArrowUp, Check, Loader2, MessageSquarePlus, Plus, RotateCcw, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowUp, Check, Loader2, MessageSquarePlus, Plus, RotateCcw, Send, Trash2 } from 'lucide-react'
 
+import { Pill } from '@/components/crm/bits'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { stageStatusMeta } from '@/lib/crm'
+import { approvalStatusMeta, stageStatusMeta } from '@/lib/crm'
 import { cn } from '@/lib/utils'
 import { STAGE_STATUSES } from '@/types/crm'
-import type { ProjectStage, StageStatus } from '@/types/crm'
+import type { ProjectStage, StageApproval, StageStatus } from '@/types/crm'
 
 const STATUS_BUTTON: Record<StageStatus, string> = {
   pending: 'data-[on=true]:bg-secondary data-[on=true]:text-foreground',
@@ -22,13 +23,19 @@ function newId() {
 
 export function StageEditor({
   stages,
+  approvals,
   onSave,
   onReset,
+  onRequestApproval,
 }: {
   stages: ProjectStage[]
+  /** Latest-first; only the newest round per stage is shown. */
+  approvals?: StageApproval[]
   /** Persists the full stage list; resolves false if the save failed. */
   onSave: (stages: ProjectStage[]) => Promise<boolean>
   onReset: () => void
+  /** Omit to hide the "Request approval" action entirely. */
+  onRequestApproval?: (stage: ProjectStage) => void
 }) {
   const [local, setLocal] = React.useState(stages)
   const [saving, setSaving] = React.useState(false)
@@ -56,6 +63,8 @@ export function StageEditor({
     ;[next[index], next[target]] = [next[target], next[index]]
     commit(next)
   }
+
+  const latestApproval = (stageId: string) => approvals?.find((a) => a.stage_id === stageId)
 
   const addStage = (e: React.FormEvent) => {
     e.preventDefault()
@@ -141,6 +150,18 @@ export function StageEditor({
                 ))}
               </div>
               <div className="flex items-center">
+                {onRequestApproval && (
+                  <button
+                    type="button"
+                    aria-label="Request client approval"
+                    title="Request client approval"
+                    onClick={() => onRequestApproval(stage)}
+                    disabled={latestApproval(stage.id)?.status === 'pending'}
+                    className="text-muted-foreground hover:text-primary rounded p-1.5 disabled:opacity-30"
+                  >
+                    <Send className="size-4" />
+                  </button>
+                )}
                 <button
                   type="button"
                   aria-label="Add note"
@@ -171,6 +192,20 @@ export function StageEditor({
                 </button>
               </div>
             </div>
+
+            {latestApproval(stage.id) && (
+              <div className="mt-2 flex flex-wrap items-center gap-2 pl-10 text-xs">
+                <Pill meta={approvalStatusMeta[latestApproval(stage.id)!.status]} />
+                {latestApproval(stage.id)!.round > 1 && (
+                  <span className="text-muted-foreground">round {latestApproval(stage.id)!.round}</span>
+                )}
+                {latestApproval(stage.id)!.status === 'changes_requested' && latestApproval(stage.id)!.client_comment && (
+                  <span className="text-foreground/80 bg-rose-500/5 rounded-full px-2 py-0.5">
+                    "{latestApproval(stage.id)!.client_comment}"
+                  </span>
+                )}
+              </div>
+            )}
 
             {(noteOpen === stage.id || stage.note) && (
               <div className="mt-2 pl-10">

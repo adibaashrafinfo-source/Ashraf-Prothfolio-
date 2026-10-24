@@ -185,4 +185,10 @@ html.lenis body {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
+
+  /* Printing from a modal (e.g. a payment receipt): the modal portals outside
+     #root, so hide the full page behind it rather than printing both. */
+  body.modal-printing #root {
+    display: none;
+  }
 }

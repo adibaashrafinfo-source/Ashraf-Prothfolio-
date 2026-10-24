@@ -4,6 +4,7 @@ import { ArrowDownLeft, ArrowUpRight, Download, Plus, Receipt, Wallet } from 'lu
 import { SectionCard, StatCard } from '@/components/crm/bits'
 import { PaymentFormModal } from '@/components/crm/PaymentFormModal'
 import { PaymentsTable } from '@/components/crm/PaymentsTable'
+import { ReceiptModal } from '@/components/crm/Receipt'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAdminTable } from '@/hooks/use-admin-table'
@@ -30,6 +31,7 @@ export function PaymentsPage() {
   const { from, to } = monthRange(month)
   const { rows, loading, error, refetch } = useAdminTable<CrmPayment>(`/crm/payments?from=${from}&to=${to}`)
   const [modal, setModal] = React.useState<{ open: boolean; payment: CrmPayment | null }>({ open: false, payment: null })
+  const [receiptPayment, setReceiptPayment] = React.useState<CrmPayment | null>(null)
 
   const received = rows.filter((p) => p.type !== 'refund').reduce((s, p) => s + p.amount, 0)
   const refunds = rows.filter((p) => p.type === 'refund').reduce((s, p) => s + p.amount, 0)
@@ -106,6 +108,7 @@ export function PaymentsPage() {
               showProject
               onEdit={(p) => setModal({ open: true, payment: p })}
               onDelete={remove}
+              onReceipt={setReceiptPayment}
               empty="No payments recorded in this month."
             />
           )}
@@ -137,6 +140,16 @@ export function PaymentsPage() {
         onClose={() => setModal({ open: false, payment: null })}
         payment={modal.payment}
         onSaved={refetch}
+      />
+      <ReceiptModal
+        open={receiptPayment !== null}
+        onClose={() => setReceiptPayment(null)}
+        payment={receiptPayment}
+        context={
+          receiptPayment
+            ? { clientName: receiptPayment.client_name ?? '', projectTitle: receiptPayment.project_title ?? '' }
+            : null
+        }
       />
     </div>
   )

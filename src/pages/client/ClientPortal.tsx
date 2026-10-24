@@ -5,6 +5,7 @@ import {
   CalendarClock,
   CalendarDays,
   ExternalLink,
+  FileBadge,
   FolderKanban,
   KeyRound,
   Loader2,
@@ -18,6 +19,9 @@ import {
 import { ChangePasswordModal } from '@/components/admin/ChangePasswordModal'
 import { ActivityFeed } from '@/components/crm/ActivityFeed'
 import { EmptyState, MoneySummary, Pill, StatCard } from '@/components/crm/bits'
+import { ClientApprovalCard } from '@/components/crm/ClientApprovalCard'
+import { ClientFileSection } from '@/components/crm/FileVault'
+import { ReceiptModal } from '@/components/crm/Receipt'
 import { StageTimeline } from '@/components/crm/StageTimeline'
 import { Logo } from '@/components/Logo'
 import { Button } from '@/components/ui/button'
@@ -29,7 +33,7 @@ import { errorMessage, hasValidToken, portalGet, portalPut } from '@/lib/apiClie
 import { deadlineLabel, formatDate, isOverdue, paymentTypeMeta, projectStatusMeta, stageStatusMeta } from '@/lib/crm'
 import { formatMoney } from '@/lib/leadMeta'
 import { cn } from '@/lib/utils'
-import type { CrmProject, PortalData } from '@/types/crm'
+import type { CrmPayment, CrmProject, PortalData } from '@/types/crm'
 
 /** Sums amounts per currency so mixed-currency clients see e.g. "৳50,000 + $200". */
 function sumLabel(projects: CrmProject[], pick: (p: CrmProject) => number) {
@@ -76,6 +80,7 @@ export function ClientPortal() {
   const [error, setError] = React.useState<string | null>(null)
   const [selectedId, setSelectedId] = React.useState<string | null>(null)
   const [pwOpen, setPwOpen] = React.useState(false)
+  const [receiptPayment, setReceiptPayment] = React.useState<CrmPayment | null>(null)
 
   const [lastSynced, setLastSynced] = React.useState<Date | null>(null)
   const snapshot = React.useRef<string | null>(null)
@@ -133,6 +138,9 @@ export function ClientPortal() {
   const billable = data?.projects.filter((p) => p.status !== 'cancelled') ?? []
   const active = data?.projects.filter((p) => ['not_started', 'running', 'on_hold', 'review'].includes(p.status)) ?? []
   const projectPayments = data?.payments.filter((p) => p.project_id === selectedId) ?? []
+  const projectFiles = data?.files.filter((f) => f.project_id === selectedId) ?? []
+  const pendingApproval = data?.approvals.find((a) => a.project_id === selectedId && a.status === 'pending') ?? null
+  const hasPendingApproval = (projectId: string) => data?.approvals.some((a) => a.project_id === projectId && a.status === 'pending')
   const whatsapp = site.phone ? `https://wa.me/${site.phone.replace(/\D/g, '').replace(/^0/, '880')}` : null
 
   return (
@@ -213,7 +221,15 @@ export function ClientPortal() {
                           p.id === selectedId ? 'border-primary bg-primary/5' : 'bg-card hover:border-primary/40',
                         )}
                       >
-                        <span className="text-sm font-semibold">{p.title}</span>
+                        <span className="flex items-center gap-1.5 text-sm font-semibold">
+                          {p.title}
+                          {hasPendingApproval(p.id) && (
+                            <span className="relative flex size-2" title="Action needed">
+                              <span className="absolute inline-flex size-full animate-ping rounded-full bg-amber-500 opacity-70" />
+                              <span className="relative inline-flex size-2 rounded-full bg-amber-500" />
+                            </span>
+                          )}
+                        </span>
                         <span className="text-muted-foreground text-xs">
                           {projectStatusMeta[p.status].label} · {p.progress}%
                         </span>
@@ -225,6 +241,10 @@ export function ClientPortal() {
                 {project && (
                   <div className="grid gap-6 lg:grid-cols-3">
                     <div className="flex flex-col gap-6 lg:col-span-2">
+                      {pendingApproval && (
+                        <ClientApprovalCard approval={pendingApproval} onResolved={() => load(false)} />
+                      )}
+
                       <section className="border-border bg-card rounded-2xl border p-6">
                         <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
                           <ProgressRing key={project.id} value={project.progress} />
@@ -291,6 +311,11 @@ export function ClientPortal() {
                         <h3 className="font-display mb-5 text-base font-semibold">Project stages</h3>
                         <StageTimeline key={project.id} stages={project.stages} />
                       </section>
+
+                      <section className="border-border bg-card rounded-2xl border p-6">
+                        <h3 className="font-display mb-4 text-base font-semibold">Files</h3>
+                        <ClientFileSection projectId={project.id} files={projectFiles} onChanged={() => load(false)} />
+                      </section>
                     </div>
 
                     <div className="flex flex-col gap-6">
@@ -316,7 +341,17 @@ export function ClientPortal() {
                                     {formatDate(p.paid_at)} · {p.method}
                                   </p>
                                 </div>
-                                <Pill meta={paymentTypeMeta[p.type]} />
+                                <div className="flex items-center gap-2">
+                                  <Pill meta={paymentTypeMeta[p.type]} />
+                                  <button
+                                    type="button"
+                                    aria-label="View receipt"
+                                    onClick={() => setReceiptPayment(p)}
+                                    className="text-muted-foreground hover:text-foreground rounded p-1"
+                                  >
+                                    <FileBadge className="size-4" />
+                                  </button>
+                                </div>
                               </li>
                             ))}
                           </ul>
@@ -363,6 +398,16 @@ export function ClientPortal() {
       </main>
 
       <ChangePasswordModal open={pwOpen} onClose={() => setPwOpen(false)} save={(body) => portalPut('/password', body)} />
+      <ReceiptModal
+        open={receiptPayment !== null}
+        onClose={() => setReceiptPayment(null)}
+        payment={receiptPayment}
+        context={
+          receiptPayment && project
+            ? { clientName: data?.client.name ?? '', clientCompany: data?.client.company, projectTitle: project.title }
+            : null
+        }
+      />
       <Toaster />
     </div>
   )

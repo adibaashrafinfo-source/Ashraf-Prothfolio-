@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Receipt, Trash2 } from 'lucide-react'
 
 import { Pill } from '@/components/crm/bits'
 import { formatDate, paymentTypeMeta } from '@/lib/crm'
@@ -13,6 +13,7 @@ export function PaymentsTable({
   showClient = false,
   onEdit,
   onDelete,
+  onReceipt,
   empty = 'No payments recorded yet.',
 }: {
   payments: CrmPayment[]
@@ -20,12 +21,13 @@ export function PaymentsTable({
   showClient?: boolean
   onEdit?: (p: CrmPayment) => void
   onDelete?: (p: CrmPayment) => void
+  onReceipt?: (p: CrmPayment) => void
   empty?: string
 }) {
   if (payments.length === 0) {
     return <p className="text-muted-foreground text-sm">{empty}</p>
   }
-  const hasActions = Boolean(onEdit || onDelete)
+  const hasActions = Boolean(onEdit || onDelete || onReceipt)
   return (
     <div className="-mx-5 overflow-x-auto">
       <table className="w-full min-w-[560px] text-sm">
@@ -76,6 +78,16 @@ export function PaymentsTable({
               </td>
               {hasActions && (
                 <td className="px-5 py-2.5 text-right whitespace-nowrap">
+                  {onReceipt && (
+                    <button
+                      type="button"
+                      onClick={() => onReceipt(p)}
+                      aria-label="View receipt"
+                      className="text-muted-foreground hover:text-foreground rounded p-1.5"
+                    >
+                      <Receipt className="size-3.5" />
+                    </button>
+                  )}
                   {onEdit && (
                     <button
                       type="button"

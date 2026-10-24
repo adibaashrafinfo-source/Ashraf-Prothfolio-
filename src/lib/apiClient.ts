@@ -143,6 +143,23 @@ export const portalPost = <T>(path: string, body: unknown): Promise<T> =>
 export const portalPut = <T>(path: string, body: unknown): Promise<T> =>
   request<T>(`/portal${path}`, { method: 'PUT', body: JSON.stringify(body) }, 'client')
 
+function projectFileForm(projectId: string, file: File, note?: string): FormData {
+  const form = new FormData()
+  form.append('file', file)
+  form.append('project_id', projectId)
+  form.append('file_name', file.name)
+  if (note) form.append('note', note)
+  return form
+}
+
+/** Admin uploads a deliverable to a project's file vault. */
+export const apiUploadProjectFile = <T>(projectId: string, file: File, note?: string): Promise<T> =>
+  request<T>('/crm/files', { method: 'POST', body: projectFileForm(projectId, file, note) })
+
+/** Client uploads their own asset to a project's file vault. */
+export const portalUploadProjectFile = <T>(projectId: string, file: File, note?: string): Promise<T> =>
+  request<T>('/portal/files', { method: 'POST', body: projectFileForm(projectId, file, note) }, 'client')
+
 export function errorMessage(err: unknown): string {
   return err instanceof ApiError ? err.message : 'Could not reach the server.'
 }
