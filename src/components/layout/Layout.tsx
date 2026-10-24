@@ -4,6 +4,7 @@ import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { Toaster } from '@/components/ui/toaster'
 import { WhatsAppButton } from '@/components/WhatsAppButton'
+import { ChatbotWidget } from '@/components/chatbot/ChatbotWidget'
 import { ScrollProgress } from '@/components/ScrollProgress'
 import { GrainOverlay } from '@/components/GrainOverlay'
 import { useSmoothScroll } from '@/hooks/use-smooth-scroll'
@@ -21,6 +22,7 @@ export function Layout() {
       </main>
       <Footer />
       <WhatsAppButton />
+      <ChatbotWidget />
       <Toaster />
     </>
   )

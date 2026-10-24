@@ -12,6 +12,8 @@ function handle_contact(string $method): void
     $email = trim((string) ($body['email'] ?? ''));
     $subject = trim((string) ($body['subject'] ?? ''));
     $message = trim((string) ($body['message'] ?? ''));
+    $phone = trim((string) ($body['phone'] ?? ''));
+    $projectType = trim((string) ($body['project_type'] ?? ''));
 
     if (mb_strlen($name) < 2 || mb_strlen($name) > 100) {
         error_response('Please enter your full name.');
@@ -25,13 +27,19 @@ function handle_contact(string $method): void
     if (mb_strlen($message) < 10 || mb_strlen($message) > 2000) {
         error_response('Message must be at least 10 characters.');
     }
+    if ($phone !== '' && mb_strlen($phone) > 50) {
+        error_response('Phone number is too long.');
+    }
+    if ($projectType !== '' && mb_strlen($projectType) > 255) {
+        error_response('Project type is too long.');
+    }
 
     $pdo = db();
     $id = uuid4();
     $stmt = $pdo->prepare(
-        'INSERT INTO contact_submissions (id, name, email, subject, message) VALUES (?, ?, ?, ?, ?)'
+        'INSERT INTO contact_submissions (id, name, email, subject, message, phone, project_type) VALUES (?, ?, ?, ?, ?, ?, ?)'
     );
-    $stmt->execute([$id, $name, $email, $subject, $message]);
+    $stmt->execute([$id, $name, $email, $subject, $message, $phone ?: null, $projectType ?: null]);
 
     json_response(['ok' => true, 'id' => $id], 201);
 }
