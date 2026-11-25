@@ -96,6 +96,23 @@ export function Hero() {
         <TechBackground />
       </motion.div>
 
+      {/* On very wide screens the centered max-w-6xl content leaves a tall empty gutter on the
+          right — the badge moves out there, bigger, instead of competing for room with the code
+          window mockup. Hidden below xl, where that gutter doesn't exist. */}
+      <motion.div
+        initial={{ opacity: 0, y: -16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: 'easeOut', delay: 0.3 }}
+        className="absolute top-24 right-10 z-10 hidden h-[560px] w-[360px] xl:block 2xl:right-20"
+      >
+        <LanyardBadge
+          image={{ src: '/id-card-photo.jpg', alt: 'Ashraful Islam Arif' }}
+          imageOffsetY={140}
+          size={190}
+          ropeLength={18}
+        />
+      </motion.div>
+
       <motion.div
         style={{ opacity: contentOpacity, y: contentY, scale: contentScale }}
         className="container-px relative z-10 mx-auto grid max-w-6xl items-center gap-16 py-16 lg:grid-cols-2 lg:gap-12"
@@ -131,7 +148,7 @@ export function Hero() {
             initial={{ opacity: 0, y: -16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: 'easeOut', delay: 0.3 }}
-            className="relative z-10 mx-auto mb-2 h-[360px] w-[230px] sm:h-[400px] sm:w-[260px]"
+            className="relative z-10 mx-auto mb-2 h-[360px] w-[230px] sm:h-[400px] sm:w-[260px] xl:hidden"
           >
             <LanyardBadge
               image={{ src: '/id-card-photo.jpg', alt: 'Ashraful Islam Arif' }}
