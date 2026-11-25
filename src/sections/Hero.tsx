@@ -14,6 +14,7 @@ import { TechBackground } from '@/components/TechBackground'
 import { ParticleNetwork } from '@/components/hero/ParticleNetwork'
 import { RotatingHeadline } from '@/components/hero/RotatingHeadline'
 import { HeroVisual } from '@/components/hero/HeroVisual'
+import { LanyardBadge } from '@/components/hero/LanyardBadge'
 import { useSiteSettings } from '@/hooks/use-site-settings'
 
 export function Hero() {
@@ -126,6 +127,17 @@ export function Hero() {
         </motion.div>
 
         <motion.div style={{ x: visualX, y: visualY }}>
+          <motion.div
+            initial={{ opacity: 0, y: -16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: 'easeOut', delay: 0.3 }}
+            className="relative z-10 mx-auto mb-2 h-[360px] w-[230px] sm:h-[400px] sm:w-[260px]"
+          >
+            <LanyardBadge
+              image={{ src: '/id-card-photo.jpg', alt: 'Ashraful Islam Arif' }}
+              imageOffsetY={140}
+            />
+          </motion.div>
           <HeroVisual />
         </motion.div>
       </motion.div>
